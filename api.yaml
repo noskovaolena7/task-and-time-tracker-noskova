@@ -1,0 +1,893 @@
+openapi: 3.1.0
+info:
+  title: Project & Task Management API
+  description: API for managing users, projects, tasks, comments, change history, attachments, and time tracking. Supports roles, notifications, and the full task lifecycle.
+  version: 1.0.0
+servers:
+  - url: "http://localhost:8080"
+
+
+tags:
+  - name: Auth
+    description: Authentication endpoints
+  - name: Users
+    description: User management
+  - name: Projects
+    description: Project CRUD operations
+  - name: Tasks
+    description: Task CRUD operations
+  - name: Time Entries
+    description: Time tracking for tasks
+  - name: Comments
+    description: Comments on tasks
+  - name: Task History
+    description: History of task changes
+  - name: Notifications
+    description: User notifications
+  - name: Attachments
+    description: File attachments for tasks
+
+paths:
+  # AUTH
+  /auth/login:
+    post:
+      summary: Login user
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+
+  /auth/signup:
+    post:
+      summary: Register new user
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignUpRequest"
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    # USERS
+  /users:
+    get:
+      summary: Get all users
+      tags:
+        - Users
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+    post:
+      summary: Create new user
+      tags:
+        - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreateRequest"
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+
+  /users/{userId}:
+    get:
+      summary: Get user by ID
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+    put:
+      summary: Update user
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateRequest"
+      responses:
+        200:
+          description: Updated
+
+    delete:
+      summary: Delete user
+      tags:
+        - Users
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        204:
+          description: Deleted
+
+    # PROJECTS
+  /projects:
+    get:
+      summary: Get all projects
+      tags:
+        - Projects
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+
+    post:
+      summary: Create new project
+      tags:
+        - Projects
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectCreateRequest"
+      responses:
+        201:
+          description: Created
+
+  /projects/{projectId}:
+    get:
+      summary: Get project by ID
+      tags:
+        - Projects
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+            404:
+              description: Not Found
+              content:
+                application/json:
+                  schema:
+                    $ref: "#/components/schemas/Error"
+
+    put:
+      summary: Update project
+      tags:
+        - Projects
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectUpdateRequest"
+      responses:
+        200:
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: Delete project
+      tags:
+        - Projects
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+      responses:
+        204:
+          description: Deleted successfully
+
+    # TASKS
+  /tasks:
+    get:
+      summary: Get all tasks
+      tags:
+        - Tasks
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+    post:
+      summary: Create new task
+      tags:
+        - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCreateRequest"
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{taskId}:
+    get:
+      summary: Get task by ID
+      tags:
+        - Tasks
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update task
+      tags:
+        - Tasks
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdateRequest"
+      responses:
+        200:
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: Delete task
+      tags:
+        - Tasks
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      responses:
+        204:
+          description: Deleted
+
+  /tasks/{taskId}/time-entries:
+    get:
+      summary: Get time entries for task
+      tags:
+        - Time Entries
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimeEntryCreateRequest"
+
+    post:
+      summary: Create time entry
+      tags:
+        - Time Entries
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TimeEntryCreateRequest"
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TimeEntryCreateRequest"
+
+    # COMMENTS
+  /tasks/{taskId}/comments:
+    get:
+      summary: Get comments for task
+      tags:
+        - Comments
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentCreateRequest"
+
+    post:
+      summary: Add comment
+      tags:
+        - Comments
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentCreateRequest"
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentCreateRequest"
+
+
+    # TASK HISTORY
+  /tasks/{taskId}/history:
+    get:
+      summary: Get task history
+      tags:
+        - Task History
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskHistory"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    # NOTIFICATIONS
+  /users/{userId}/notifications:
+    get:
+      summary: Get notifications for user
+      tags:
+        - Notifications
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /notifications/{notificationId}/read:
+    put:
+      summary: Mark notification as read
+      tags:
+        - Notifications
+      parameters:
+        - $ref: "#/components/parameters/notificationId"
+      responses:
+        200:
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+    # ATTACHMENTS
+  /tasks/{taskId}/attachments:
+    get:
+      summary: Get attachments for task
+      tags:
+        - Attachments
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      responses:
+        200:
+          description: OK
+
+    post:
+      summary: Upload attachment
+      tags:
+        - Attachments
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttachmentCreateRequest"
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttachmentCreateRequest"
+
+
+components:
+  # PARAMETERS
+  parameters:
+    userId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    projectId:
+      name: projectId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    taskId:
+      name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+    notificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  # SCHEMAS
+  schemas:
+    LoginRequest:
+      type: object
+      required: [ email, password ]
+      properties:
+        email:
+          type: string
+          format: email
+          required: true
+          example: "codillas@gmail.com"
+        password:
+          type: string
+          format: password
+          writeOnly: true
+          required: true
+          example: 'Best_secure_password'
+
+    SignUpRequest:
+      type: object
+      required: [ first_name, last_name, email, password, phone_number ]
+      properties:
+        first_name:
+          type: string
+          required: true
+          example: Vasya
+        last_name:
+          type: string
+          required: true
+          example: Pupkin
+        email:
+          type: string
+          format: email
+          required: true
+          example: "codillas@gmail.com"
+        password:
+          type: string
+          format: password
+          writeOnly: true
+          required: true
+          example: 'Best_secure_password'
+        phone_number:
+          type: string
+          required: true
+          example: +417612312312
+        role:
+          type: string
+          enum: [ ADMIN, MANAGER, USER ]
+          description: >
+            Роль користувача у системі. Використовується для контролю доступу
+            ADMIN має повний доступ, MANAGER керує проектами та задачами, USER виконує задачі.
+
+    TokenResponse:
+      type: object
+      required: [ token ]
+      properties:
+        token:
+          type: string
+          format: text
+          description: JWT
+          example: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiJ9.abc123
+          tokenType:
+            type: string
+            example: Bearer
+          expiresIn:
+            type: integer
+            description: Час життя токена в секундах
+            example: 3600
+
+      # USERS
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+          required: true
+          example: Vasya
+        last_name:
+          type: string
+          required: true
+          example: Pupkin
+        email:
+          type: string
+          format: email
+          required: true
+          example: "codillas@gmail.com"
+        password:
+          type: string
+          format: password
+          writeOnly: true
+          required: true
+          example: 'Best_secure_password'
+        phone_number:
+          type: string
+          required: true
+          example: +417612312312
+        role:
+          type: string
+          enum: [ ADMIN, MANAGER, USER ]
+
+
+    UserCreateRequest:
+      type: object
+      required: [ first_name, last_name, email, password, phone_number, role ]
+      properties:
+        first_name:
+          type: string
+          required: true
+          example: Vasya
+        last_name:
+          type: string
+          required: true
+          example: Pupkin
+        email:
+          type: string
+          format: email
+          required: true
+          example: "codillas@gmail.com"
+        password:
+          type: string
+          format: password
+          writeOnly: true
+          required: true
+          example: 'Best_secure_password'
+        phone_number:
+          type: string
+          required: true
+          example: +417612312312
+        role:
+          type: string
+          enum: [ ADMIN, MANAGER, USER ]
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone_number:
+          type: string
+        role:
+          type: string
+          enum: [ ADMIN, MANAGER, USER ]
+
+      # PROJECTS
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+          readOnly: true
+
+    ProjectCreateRequest:
+      type: object
+      required: [ name, description, created_by ]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+
+    ProjectUpdateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+      # TASKS
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [ SUCCESS, CANCELED ]
+        priority:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+        assigned_to:
+          type: string
+          format: uuid
+
+    TaskCreateRequest:
+      type: object
+      required:
+        - project_id
+        - title
+        - description
+        - status
+        - priority
+        - created_by
+        - assigned_to
+      properties:
+        project_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        created_by:
+          type: string
+          format: uuid
+        assigned_to:
+          type: string
+          format: uuid
+
+    TaskUpdateRequest:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        assigned_to:
+          type: string
+          format: uuid
+
+      # TIME ENTRIES
+    TimeEntryCreateRequest:
+      type: object
+      required: [ user_id, start_time ]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+
+      # COMMENTS
+    CommentCreateRequest:
+      type: object
+      required: [ user_id, message ]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        message:
+          type: string
+    #TASK HISTORY
+    TaskHistory:
+      type: object
+      required: [ id, task_id, user_id, field_changed, changed_at ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        task_id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        field_changed:
+          type: string
+        old_value:
+          type: string
+        new_value:
+          type: string
+        changed_at:
+          type: string
+          format: date-time
+
+    # NOTIFICATION
+    Notification:
+      type: object
+      required: [ id, user_id, task_id, type, message, is_read, created_at ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        task_id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        message:
+          type: string
+        is_read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+      # ATTACHMENTS
+    AttachmentCreateRequest:
+      type: object
+      required: [ id, task_id, file_url, uploaded_by, uploaded_at ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        task_id:
+          type: string
+          format: uuid
+        file_url:
+          type: string
+        uploaded_by:
+          type: string
+          format: uuid
+        uploaded_at:
+          type: string
+          format: date-time
+
+
+      # ERROR
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+
+

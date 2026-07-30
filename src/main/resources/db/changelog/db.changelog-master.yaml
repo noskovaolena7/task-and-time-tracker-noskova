@@ -1,0 +1,8 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 001-create-schema.sql
+            relativeToChangelogFile: true
