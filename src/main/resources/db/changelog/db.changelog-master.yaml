@@ -6,3 +6,12 @@ databaseChangeLog:
         - sqlFile:
             path: 001-create-schema.sql
             relativeToChangelogFile: true
+
+  - changeSet:
+      id: 002
+      author: Olena
+      runOnChange: true
+      changes:
+        - sql:
+            comment: "Dummy change to allow runOnChange"
+            sql: "SELECT 1;"

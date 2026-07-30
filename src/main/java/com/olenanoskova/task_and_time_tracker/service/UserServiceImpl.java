@@ -40,13 +40,13 @@ public class UserServiceImpl implements UserService {
         }
 
         // Створення нового юзера
-        user.setId(UUID.randomUUID().toString());
+        user.setId(UUID.randomUUID());
         user.setStatus(Status.ACTIVE);
         user.setRole(Role.USER);
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
 
-        userHashMap.put(UUID.fromString(user.getId()), user);
+        userHashMap.put(user.getId(), user);
 
         log.info("Successfully created a user with email {}", user.getEmail());
 

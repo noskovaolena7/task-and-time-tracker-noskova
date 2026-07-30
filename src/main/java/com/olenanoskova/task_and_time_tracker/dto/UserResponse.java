@@ -5,22 +5,24 @@ import com.olenanoskova.task_and_time_tracker.model.Role;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 public class UserResponse {
 
-    private String id;
+    private UUID id;
     private String fullName;
     private String email;
     private String phoneNumber;
-    private String role;
+    private Role role;
 
-    public UserResponse(String id, String fullName, String email,
+    public UserResponse(UUID id, String fullName, String email,
                         String phoneNumber, Role role) {
         this.id = id;
         this.fullName = fullName;
         this.email = email;
         this.phoneNumber = phoneNumber;
-        this.role = String.valueOf(role);
+        this.role = role;
     }
 }
