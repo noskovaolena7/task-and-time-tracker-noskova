@@ -5,7 +5,6 @@ import com.olenanoskova.task_and_time_tracker.dto.UserCreateRequest;
 import com.olenanoskova.task_and_time_tracker.dto.UserResponse;
 import com.olenanoskova.task_and_time_tracker.dto.UserUpdateRequest;
 import com.olenanoskova.task_and_time_tracker.mapper.UserMapper;
-import com.olenanoskova.task_and_time_tracker.model.Status;
 import com.olenanoskova.task_and_time_tracker.model.User;
 import com.olenanoskova.task_and_time_tracker.service.UserService;
 import jakarta.validation.Valid;
@@ -13,7 +12,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
