@@ -1,6 +1,5 @@
 package com.olenanoskova.task_and_time_tracker.repository.entity;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.exception;
 
-import com.olenanoskova.task_and_time_tracker.dto.ErrorDto;
+import com.olenanoskova.task_and_time_tracker.controller.dto.ErrorDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
