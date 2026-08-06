@@ -1,12 +1,11 @@
 package com.olenanoskova.task_and_time_tracker.controller;
 
-
 import com.olenanoskova.task_and_time_tracker.controller.dto.UserCreateRequestDto;
 import com.olenanoskova.task_and_time_tracker.controller.dto.UserResponseDto;
 import com.olenanoskova.task_and_time_tracker.controller.dto.UserUpdateRequestDto;
 import com.olenanoskova.task_and_time_tracker.mapper.UserMapper;
-import com.olenanoskova.task_and_time_tracker.service.model.User;
 import com.olenanoskova.task_and_time_tracker.service.UserService;
+import com.olenanoskova.task_and_time_tracker.service.model.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,12 +20,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserController {
 
-
     private final UserService userService;
     private final UserMapper userMapper;
 
     @PostMapping
-    public ResponseEntity<UserResponseDto> createUser(@Valid @RequestBody UserCreateRequestDto request) {
+    public ResponseEntity<UserResponseDto> createUser(
+            @Valid @RequestBody UserCreateRequestDto request) {
 
         User user = userMapper.toDomain(request);
         User createdUser = userService.createUser(user);
@@ -43,36 +42,35 @@ public class UserController {
                 .map(userMapper::toDto)
                 .toList();
 
-        return ResponseEntity.ok().body(responseList);
+        return ResponseEntity.ok(responseList);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserResponseDto> getUserById(@PathVariable String id) {
+    public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {
 
-
-        User user = userService.getUserById(UUID.fromString(id));
+        User user = userService.getUserById(id);
         UserResponseDto response = userMapper.toDto(user);
 
-        return ResponseEntity.ok().body(response);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDto> updateUser(
-            @PathVariable String id,
-            @Valid @RequestBody UserUpdateRequestDto request
-    ) {
+            @PathVariable UUID id,
+            @Valid @RequestBody UserUpdateRequestDto request) {
 
-        User updatedUser = userService.updateUser(UUID.fromString(id), request);
+        User user = userService.getUserById(id);
+        userMapper.updateDomain(request, user);
+        User updatedUser = userService.updateUser(id, user);
         UserResponseDto response = userMapper.toDto(updatedUser);
 
-        return ResponseEntity.ok().body(response);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
 
         userService.delete(id);
-
         return ResponseEntity.noContent().build();
     }
 }

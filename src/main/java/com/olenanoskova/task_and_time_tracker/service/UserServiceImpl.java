@@ -1,6 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.service;
 
-import com.olenanoskova.task_and_time_tracker.controller.dto.UserUpdateRequestDto;
+
 import com.olenanoskova.task_and_time_tracker.exception.UserAlreadyExistException;
 import com.olenanoskova.task_and_time_tracker.exception.UserNotFoundException;
 import com.olenanoskova.task_and_time_tracker.mapper.UserMapper;
@@ -90,27 +90,36 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User updateUser(UUID id, UserUpdateRequestDto request) {
+    public User updateUser(UUID id, User user) {
 
-        UserEntity entity = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+        log.info("Attempting to update user with id {}", id);
 
-        User domain = userMapper.toDomain(entity);
-        domain = userMapper.toDomain(request, domain);
-        domain.setUpdatedAt(Instant.now());
+        Optional<UserEntity> optionalUser = userRepository.findById(id);
 
-        UserEntity saved = userRepository.save(userMapper.toEntity(domain));
-        return userMapper.toDomain(saved);
+        if (optionalUser.isEmpty()) {
+            throw new UserNotFoundException(id);
+        }
+
+        UserEntity userEntity = optionalUser.get();
+        userEntity.setFirstName(user.getFirstName());
+        userEntity.setLastName(user.getLastName());
+        userEntity.setPhoneNumber(user.getPhoneNumber());
+        userEntity.setUpdatedAt(Instant.now());
+
+        UserEntity savedUser = userRepository.save(userEntity);
+
+        log.info("Successfully updated user with id {}", id);
+
+        return userMapper.toDomain(savedUser);
     }
 
     @Override
-    public void delete(String id) {
-        UUID uuid = UUID.fromString(id);
+    public void delete(UUID id) {
 
-        if (!userRepository.existsById(uuid)) {
-            throw new UserNotFoundException(uuid);
+        if (!userRepository.existsById(id)) {
+            throw new UserNotFoundException(id);
         }
 
-        userRepository.deleteById(uuid);
+        userRepository.deleteById(id);
     }
 }

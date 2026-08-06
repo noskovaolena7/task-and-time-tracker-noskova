@@ -7,6 +7,8 @@ import com.olenanoskova.task_and_time_tracker.repository.entity.UserEntity;
 import com.olenanoskova.task_and_time_tracker.service.model.User;
 import com.olenanoskova.task_and_time_tracker.service.model.Role;
 import com.olenanoskova.task_and_time_tracker.service.model.Status;
+import jakarta.validation.Valid;
+import lombok.Data;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -14,6 +16,7 @@ import java.time.Instant;
 @Component
 public class UserMapper {
 
+    // DTO → Domain (Create)
     public User toDomain(UserCreateRequestDto dto) {
         User user = new User();
         user.setFirstName(dto.getFirstName());
@@ -24,14 +27,15 @@ public class UserMapper {
         return user;
     }
 
-    public User toDomain(UserUpdateRequestDto dto, User user) {
+    // DTO → Domain (Update)
+    public void updateDomain(UserUpdateRequestDto dto, User user) {
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
         user.setPhoneNumber(dto.getPhoneNumber());
         user.setUpdatedAt(Instant.now());
-        return user;
     }
 
+    // Domain → Entity
     public UserEntity toEntity(User user) {
         UserEntity entity = new UserEntity();
         entity.setId(user.getId());
@@ -47,6 +51,7 @@ public class UserMapper {
         return entity;
     }
 
+    // Entity → Domain  ← ЭТОГО У ТЕБЯ НЕ ХВАТАЛО
     public User toDomain(UserEntity entity) {
         User user = new User();
         user.setId(entity.getId());
@@ -62,19 +67,16 @@ public class UserMapper {
         return user;
     }
 
+    // Domain → Response DTO
     public UserResponseDto toDto(User user) {
         UserResponseDto dto = new UserResponseDto();
         dto.setId(user.getId());
         dto.setFullName(user.getFirstName() + " " + user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setPhoneNumber(user.getPhoneNumber());
-
-        com.olenanoskova.task_and_time_tracker.controller.dto.Role dtoRole =
-                com.olenanoskova.task_and_time_tracker.controller.dto.Role.valueOf(
-                        user.getRole().name()
-                );
-
-        dto.setRole(dtoRole);
+        dto.setRole(com.olenanoskova.task_and_time_tracker.controller.dto.Role.valueOf(user.getRole().name()));
         return dto;
     }
 }
+
+
