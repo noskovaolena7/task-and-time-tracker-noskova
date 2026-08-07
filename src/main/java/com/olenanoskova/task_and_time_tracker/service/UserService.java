@@ -1,8 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.service;
 
-import com.olenanoskova.task_and_time_tracker.dto.UserUpdateRequest;
-import com.olenanoskova.task_and_time_tracker.model.User;
-import jakarta.validation.Valid;
+import com.olenanoskova.task_and_time_tracker.service.model.User;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,8 +17,8 @@ public interface UserService {
 
     User blockUser(UUID id);
 
-    User updateUser(UUID uuid, @Valid UserUpdateRequest request);
+    User updateUser(UUID id, User user);
 
-    void delete(String id);
+    void delete(UUID id);
 
 }
