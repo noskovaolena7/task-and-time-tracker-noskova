@@ -1,7 +1,8 @@
 package com.olenanoskova.task_and_time_tracker.service.model;
 
 public enum Role {
-    ADMIN,
+    USER,
     MANAGER,
-    USER
+    ADMIN,
+    OWNER
 }

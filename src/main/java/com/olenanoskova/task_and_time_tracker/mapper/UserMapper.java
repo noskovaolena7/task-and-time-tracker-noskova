@@ -1,14 +1,13 @@
 package com.olenanoskova.task_and_time_tracker.mapper;
 
-import com.olenanoskova.task_and_time_tracker.controller.dto.UserCreateRequestDto;
-import com.olenanoskova.task_and_time_tracker.controller.dto.UserUpdateRequestDto;
-import com.olenanoskova.task_and_time_tracker.controller.dto.UserResponseDto;
+import com.olenanoskova.task_and_time_tracker.controller.dto.*;
+import com.olenanoskova.task_and_time_tracker.repository.entity.RoleEntity;
+import com.olenanoskova.task_and_time_tracker.repository.entity.StatusEntity;
 import com.olenanoskova.task_and_time_tracker.repository.entity.UserEntity;
 import com.olenanoskova.task_and_time_tracker.service.model.User;
 import com.olenanoskova.task_and_time_tracker.service.model.Role;
 import com.olenanoskova.task_and_time_tracker.service.model.Status;
 import jakarta.validation.Valid;
-import lombok.Data;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -17,7 +16,7 @@ import java.time.Instant;
 public class UserMapper {
 
     // DTO → Domain (Create)
-    public User toDomain(UserCreateRequestDto dto) {
+    public User toDomain(@Valid SignUpRequestDto dto) {
         User user = new User();
         user.setFirstName(dto.getFirstName());
         user.setLastName(dto.getLastName());
@@ -25,6 +24,17 @@ public class UserMapper {
         user.setPassword(dto.getPassword());
         user.setPhoneNumber(dto.getPhoneNumber());
         return user;
+    }
+
+    public User toDomain(UserCreateRequestDto dto) {
+
+            User user = new User();
+            user.setFirstName(dto.getFirstName());
+            user.setLastName(dto.getLastName());
+            user.setEmail(dto.getEmail());
+            user.setPassword(dto.getPassword());
+            user.setPhoneNumber(dto.getPhoneNumber());
+            return user;
     }
 
     // DTO → Domain (Update)
@@ -44,8 +54,8 @@ public class UserMapper {
         entity.setEmail(user.getEmail());
         entity.setPassword(user.getPassword());
         entity.setPhoneNumber(user.getPhoneNumber());
-        entity.setRole(com.olenanoskova.task_and_time_tracker.repository.entity.Role.valueOf(user.getRole().name()));
-        entity.setStatus(com.olenanoskova.task_and_time_tracker.repository.entity.Status.valueOf(user.getStatus().name()));
+        entity.setRole(RoleEntity.valueOf(user.getRole().name()));
+        entity.setStatus(StatusEntity.valueOf(user.getStatus().name()));
         entity.setCreatedAt(user.getCreatedAt());
         entity.setUpdatedAt(user.getUpdatedAt());
         return entity;
@@ -71,10 +81,11 @@ public class UserMapper {
     public UserResponseDto toDto(User user) {
         UserResponseDto dto = new UserResponseDto();
         dto.setId(user.getId());
-        dto.setFullName(user.getFirstName() + " " + user.getLastName());
+        dto.setFirstName(user.getFirstName());
+        dto.setLastName(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setPhoneNumber(user.getPhoneNumber());
-        dto.setRole(com.olenanoskova.task_and_time_tracker.controller.dto.Role.valueOf(user.getRole().name()));
+        dto.setMemberRole(MemberRoleDto.valueOf(user.getRole().name()));
         return dto;
     }
 }

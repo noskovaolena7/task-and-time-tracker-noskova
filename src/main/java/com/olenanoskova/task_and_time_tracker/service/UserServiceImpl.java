@@ -5,6 +5,7 @@ import com.olenanoskova.task_and_time_tracker.exception.UserAlreadyExistExceptio
 import com.olenanoskova.task_and_time_tracker.exception.UserNotFoundException;
 import com.olenanoskova.task_and_time_tracker.mapper.UserMapper;
 import com.olenanoskova.task_and_time_tracker.repository.UserRepository;
+import com.olenanoskova.task_and_time_tracker.repository.entity.StatusEntity;
 import com.olenanoskova.task_and_time_tracker.repository.entity.UserEntity;
 import com.olenanoskova.task_and_time_tracker.service.model.User;
 import com.olenanoskova.task_and_time_tracker.service.model.Role;
@@ -70,7 +71,7 @@ public class UserServiceImpl implements UserService {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        entity.setStatus(com.olenanoskova.task_and_time_tracker.repository.entity.Status.ACTIVE);
+        entity.setStatus(StatusEntity.ACTIVE);
         entity.setUpdatedAt(Instant.now());
 
         UserEntity saved = userRepository.save(entity);
@@ -82,7 +83,7 @@ public class UserServiceImpl implements UserService {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        entity.setStatus(com.olenanoskova.task_and_time_tracker.repository.entity.Status.BLOCKED);
+        entity.setStatus(StatusEntity.BLOCKED);
         entity.setUpdatedAt(Instant.now());
 
         UserEntity saved = userRepository.save(entity);

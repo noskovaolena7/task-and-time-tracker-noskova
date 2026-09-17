@@ -33,10 +33,10 @@ public class UserEntity {
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
-    private Role role;
+    private RoleEntity role;
 
     @Enumerated(EnumType.STRING)
-    private Status status;
+    private StatusEntity status;
 
     @Column(name = "created_at")
     private Instant createdAt;

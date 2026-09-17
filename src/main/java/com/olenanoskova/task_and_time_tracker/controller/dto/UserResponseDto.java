@@ -13,9 +13,10 @@ import java.util.UUID;
 public class UserResponseDto {
 
     private UUID id;
-    private String fullName;
+    private String firstName;
+    private String lastName;
     private String email;
     private String phoneNumber;
-    private Role role;
+    private MemberRoleDto memberRole;
 
 }
