@@ -1,0 +1,8 @@
+package com.olenanoskova.task_and_time_tracker.service.model;
+
+public enum NotificationStatus {
+    SENT,
+    DELIVERED,
+    READ,
+    FAILED
+}

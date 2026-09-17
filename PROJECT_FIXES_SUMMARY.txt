@@ -1,0 +1,76 @@
+TASK AND TIME TRACKER — PROJECT COMPATIBILITY FIX SUMMARY
+
+Date: 2026-09-17
+
+This file documents the consistency fixes applied across the project without changing the User module structure.
+
+1) Fixed broken DTO contracts and mapper field names
+- src/main/java/com/olenanoskova/task_and_time_tracker/mapper/UserMapper.java
+  - Removed invalid setFullName(...) call
+  - Mapped to actual UserResponseDto fields: firstName, lastName, email, phoneNumber, memberRole
+- src/main/java/com/olenanoskova/task_and_time_tracker/mapper/ProjectMapper.java
+  - Restored correct ProjectCreateRequestDto and ProjectUpdateRequestDto accessors
+  - Added companyId mapping and safe null checks in updateDomain
+- src/main/java/com/olenanoskova/task_and_time_tracker/mapper/ProjectMemberMapper.java
+  - Aligned DTO field names with memberRoleDto and MemberRoleDto enum
+  - Repaired role conversion to MemberRole/MemberRoleEntity
+- src/main/java/com/olenanoskova/task_and_time_tracker/mapper/TaskHistoryMapper.java
+  - Fixed mismatched TaskHistoryEntity field access (
+      field instead of fieldName,
+      setField/getField
+    )
+  - Added toDtoList(...) method for controller compatibility
+- src/main/java/com/olenanoskova/task_and_time_tracker/mapper/UserCompanyRoleMapper.java
+  - Replaced Role/RoleEntity mismatches with MemberRole/MemberRoleEntity
+  - Corrected DTO conversion to RoleDto
+
+2) Restored consistent model/entity contracts
+- src/main/java/com/olenanoskova/task_and_time_tracker/service/model/UserCompanyRole.java
+  - Changed role type from Role to MemberRole
+- src/main/java/com/olenanoskova/task_and_time_tracker/repository/entity/UserCompanyRoleEntity.java
+  - Added createdAt and updatedAt fields
+  - Switched enum to MemberRoleEntity
+- src/main/java/com/olenanoskova/task_and_time_tracker/repository/entity/ProjectMemberEntity.java
+  - Added createdAt and updatedAt fields
+  - Kept memberRole field consistent with ProjectMember model
+- src/main/java/com/olenanoskova/task_and_time_tracker/repository/entity/TaskHistoryEntity.java
+  - Kept field field consistent with mapper and domain model
+
+3) Corrected service/controller contracts
+- src/main/java/com/olenanoskova/task_and_time_tracker/controller/ProjectController.java
+  - Matched service method signatures
+  - Fixed update/delete routes to use /{id}
+  - Replaced unsupported no-arg getProjects() call with valid getProjects(0, 20, null)
+- src/main/java/com/olenanoskova/task_and_time_tracker/controller/ProjectMemberController.java
+  - Updated method calls to service contract: getMembers(projectId), addMember(projectId, member)
+- src/main/java/com/olenanoskova/task_and_time_tracker/controller/TimeEntryController.java
+  - Updated to use getTimeEntries(taskId) and createTimeEntry(taskId, timeEntry)
+- src/main/java/com/olenanoskova/task_and_time_tracker/controller/CompanyRoleController.java
+  - Updated to use getRoles(companyId) and assignRole(companyId, role)
+- src/main/java/com/olenanoskova/task_and_time_tracker/service/UserCompanyRoleServiceImpl.java
+  - Fixed calls to getRole()/repository lookup with findByUserIdAndCompanyId(...)
+  - Converted repository enum values correctly for update
+
+4) Repaired DTOs with missing getters/setters
+- src/main/java/com/olenanoskova/task_and_time_tracker/controller/dto/ProjectCreateRequestDto.java
+- src/main/java/com/olenanoskova/task_and_time_tracker/controller/dto/ProjectUpdateRequestDto.java
+- src/main/java/com/olenanoskova/task_and_time_tracker/controller/dto/ProjectResponseDto.java
+- src/main/java/com/olenanoskova/task_and_time_tracker/controller/dto/ProjectMemberCreateRequestDto.java
+- src/main/java/com/olenanoskova/task_and_time_tracker/controller/dto/ProjectMemberResponseDto.java
+- src/main/java/com/olenanoskova/task_and_time_tracker/controller/dto/TaskHistoryResponseDto.java
+
+5) Fixed exception handling compatibility
+- src/main/java/com/olenanoskova/task_and_time_tracker/exception/GlobalExceptionHandler.java
+  - Replaced invalid ErrorDto(String) constructors with property-based creation using setMessage/setCode
+
+6) Repository contract repair
+- src/main/java/com/olenanoskova/task_and_time_tracker/repository/UserCompanyRoleRepository.java
+  - Added Optional<UserCompanyRoleEntity> findByUserIdAndCompanyId(UUID userId, UUID companyId);
+
+Validation
+- Maven compile: successful
+- Maven test: successful
+
+Notes
+- The User module was used as the structural template but left unchanged.
+- The project structure remains consistent with the existing codebase style.
