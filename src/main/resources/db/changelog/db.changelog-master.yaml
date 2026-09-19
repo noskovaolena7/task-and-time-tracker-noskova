@@ -7,3 +7,27 @@ databaseChangeLog:
             path: 001-create-schema.sql
             relativeToChangelogFile: true
 
+  - changeSet:
+      id: 002
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 002-add-workspace-id.sql
+            relativeToChangelogFile: true
+
+  - changeSet:
+      id: 003
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 003-create-workspaces.sql
+            relativeToChangelogFile: true
+
+  - changeSet:
+      id: 004
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 004-create-invites.sql
+            relativeToChangelogFile: true
+

@@ -9,6 +9,8 @@ public interface CompanyService {
 
     Company createCompany(Company company);
 
+    Company createCompanyForRegistration(String name, String description);
+
     List<Company> getCompanies();
 
     Company getCompanyById(UUID id);

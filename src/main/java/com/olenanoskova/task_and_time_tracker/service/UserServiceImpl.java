@@ -12,6 +12,7 @@ import com.olenanoskova.task_and_time_tracker.service.model.Role;
 import com.olenanoskova.task_and_time_tracker.service.model.Status;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -27,6 +28,8 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final WorkspaceService workspaceService;
 
     @Override
     public User createUser(User user) {
@@ -38,6 +41,7 @@ public class UserServiceImpl implements UserService {
             throw new UserAlreadyExistException(user.getEmail());
         }
 
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRole(Role.USER);
         user.setStatus(Status.ACTIVE);
         user.setCreatedAt(Instant.now());
@@ -47,6 +51,60 @@ public class UserServiceImpl implements UserService {
         UserEntity saved = userRepository.save(entity);
 
         log.info("Successfully created user with email {}", user.getEmail());
+
+        return userMapper.toDomain(saved);
+    }
+
+    @Override
+    public User registerPersonalUser(User user) {
+
+        log.info("Registering personal user with email {}", user.getEmail());
+
+        Optional<UserEntity> optionalUser = userRepository.findByEmail(user.getEmail());
+        if (optionalUser.isPresent()) {
+            throw new UserAlreadyExistException(user.getEmail());
+        }
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(Role.USER); // 🔥 PERSONAL USER = USER
+        user.setStatus(Status.ACTIVE);
+        user.setCreatedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
+
+        var workspace = workspaceService.createPersonalWorkspace(null);
+
+        user.setWorkspaceId(workspace.getId());
+
+        UserEntity saved = userRepository.save(userMapper.toEntity(user));
+
+        log.info("Successfully registered personal user {}", user.getEmail());
+
+        return userMapper.toDomain(saved);
+    }
+
+    @Override
+    public User registerCompanyOwner(User user, UUID companyId) {
+
+        log.info("Registering company owner with email {}", user.getEmail());
+
+        Optional<UserEntity> optionalUser = userRepository.findByEmail(user.getEmail());
+        if (optionalUser.isPresent()) {
+            throw new UserAlreadyExistException(user.getEmail());
+        }
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(Role.OWNER); // 🔥 OWNER
+        user.setStatus(Status.ACTIVE);
+        user.setCreatedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
+
+        var workspace = workspaceService.createCompanyWorkspace(null, companyId);
+
+        user.setWorkspaceId(workspace.getId());
+
+        UserEntity saved = userRepository.save(userMapper.toEntity(user));
+
+        log.info("Successfully registered company owner {}", user.getEmail());
 
         return userMapper.toDomain(saved);
     }

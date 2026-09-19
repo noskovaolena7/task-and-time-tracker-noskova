@@ -38,6 +38,9 @@ public class UserEntity {
     @Enumerated(EnumType.STRING)
     private StatusEntity status;
 
+    @Column(name = "workspace_id")
+    private UUID workspaceId;
+
     @Column(name = "created_at")
     private Instant createdAt;
 

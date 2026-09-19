@@ -9,6 +9,10 @@ public interface UserService {
 
     User createUser(User user);
 
+    User registerPersonalUser(User user);
+    
+    User registerCompanyOwner(User user, UUID companyId);
+
     List<User> getUsers();
 
     User getUserById(UUID id);

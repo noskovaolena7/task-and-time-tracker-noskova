@@ -58,6 +58,7 @@ public class UserMapper {
         entity.setStatus(StatusEntity.valueOf(user.getStatus().name()));
         entity.setCreatedAt(user.getCreatedAt());
         entity.setUpdatedAt(user.getUpdatedAt());
+        entity.setWorkspaceId(user.getWorkspaceId());
         return entity;
     }
 
@@ -74,6 +75,7 @@ public class UserMapper {
         user.setStatus(Status.valueOf(entity.getStatus().name()));
         user.setCreatedAt(entity.getCreatedAt());
         user.setUpdatedAt(entity.getUpdatedAt());
+        user.setWorkspaceId(entity.getWorkspaceId());
         return user;
     }
 
