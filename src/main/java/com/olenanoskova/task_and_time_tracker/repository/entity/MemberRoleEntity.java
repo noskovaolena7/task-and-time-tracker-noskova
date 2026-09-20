@@ -4,5 +4,5 @@ public enum MemberRoleEntity {
     USER,
     MANAGER,
     ADMIN,
-    OWNER
+    WORKER, OWNER
 }

@@ -45,6 +45,29 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    public Company createCompanyForRegistration(String name, String description) {
+
+        log.info("Creating company during registration: {}", name);
+
+        Optional<CompanyEntity> optionalCompany = companyRepository.findByName(name);
+        if (optionalCompany.isPresent()) {
+            throw new CompanyAlreadyExistException(name);
+        }
+
+        Company company = new Company();
+        company.setName(name);
+        company.setDescription(description);
+        company.setCreatedAt(Instant.now());
+        company.setUpdatedAt(Instant.now());
+
+        CompanyEntity saved = companyRepository.save(companyMapper.toEntity(company));
+
+        log.info("Company created for registration: {}", name);
+
+        return companyMapper.toDomain(saved);
+    }
+
+    @Override
     public List<Company> getCompanies() {
 
         log.info("Fetching all companies");

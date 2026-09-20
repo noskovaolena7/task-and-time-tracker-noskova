@@ -20,6 +20,7 @@ public class User {
     private String phoneNumber;
     private Role role;
     private Status status;
+    private UUID workspaceId;
     private Instant createdAt;
     private Instant updatedAt;
 
