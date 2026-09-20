@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,7 +26,7 @@ public class ProjectController {
     private final ProjectMapper projectMapper;
 
     @PostMapping
-
+    @PreAuthorize("@securityService.canCreateProject(#request.companyId)")
     public ResponseEntity<ProjectResponseDto> createProject(
             @Valid @RequestBody ProjectCreateRequestDto request) {
 
@@ -35,8 +36,8 @@ public class ProjectController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-
     @GetMapping
+    @PreAuthorize("@securityService.canListUsers()")
     public ResponseEntity<List<ProjectResponseDto>> getAllProjects() {
 
         List<Project> projects = projectService.getProjects(0, 20, null);
@@ -48,6 +49,7 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@securityService.canAccessProject(#id)")
     public ResponseEntity<ProjectResponseDto> getProjectById(@PathVariable UUID id) {
 
         Project project = projectService.getProjectById(id);
@@ -57,6 +59,7 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@securityService.canUpdateProject(#id)")
     public ResponseEntity<ProjectResponseDto> updateProject(
             @PathVariable UUID id,
             @Valid @RequestBody ProjectUpdateRequestDto request) {
@@ -70,6 +73,7 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@securityService.canDeleteProject(#id)")
     public ResponseEntity<Void> deleteProject(@PathVariable UUID id) {
 
         projectService.deleteProject(id);

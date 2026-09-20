@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Component
 public class AttachmentMapper {
@@ -18,7 +19,7 @@ public class AttachmentMapper {
         attachment.setFileName(dto.getFileName());
         attachment.setFileUrl(dto.getFileUrl());
         attachment.setUploadedBy(dto.getUploadedBy());
-        attachment.setCreatedAt(Instant.now());
+        attachment.setUploadedAt(Instant.now());
         attachment.setUpdatedAt(Instant.now());
         return attachment;
     }
@@ -27,11 +28,12 @@ public class AttachmentMapper {
     public AttachmentEntity toEntity(Attachment attachment) {
         AttachmentEntity entity = new AttachmentEntity();
         entity.setId(attachment.getId());
+        entity.setProjectId(attachment.getProjectId());
         entity.setTaskId(attachment.getTaskId());
         entity.setFileName(attachment.getFileName());
         entity.setFileUrl(attachment.getFileUrl());
         entity.setUploadedBy(attachment.getUploadedBy());
-        entity.setCreatedAt(attachment.getCreatedAt());
+        entity.setUploadedAt(attachment.getUploadedAt());
         entity.setUpdatedAt(attachment.getUpdatedAt());
         return entity;
     }
@@ -40,11 +42,12 @@ public class AttachmentMapper {
     public Attachment toDomain(AttachmentEntity entity) {
         Attachment attachment = new Attachment();
         attachment.setId(entity.getId());
+        attachment.setProjectId(entity.getProjectId());
         attachment.setTaskId(entity.getTaskId());
         attachment.setFileName(entity.getFileName());
         attachment.setFileUrl(entity.getFileUrl());
         attachment.setUploadedBy(entity.getUploadedBy());
-        attachment.setCreatedAt(entity.getCreatedAt());
+        attachment.setUploadedAt(entity.getUploadedAt());
         attachment.setUpdatedAt(entity.getUpdatedAt());
         return attachment;
     }
@@ -53,13 +56,32 @@ public class AttachmentMapper {
     public AttachmentResponseDto toDto(Attachment attachment) {
         AttachmentResponseDto dto = new AttachmentResponseDto();
         dto.setId(attachment.getId());
+        dto.setProjectId(attachment.getProjectId());
         dto.setTaskId(attachment.getTaskId());
         dto.setFileName(attachment.getFileName());
         dto.setFileUrl(attachment.getFileUrl());
         dto.setUploadedBy(attachment.getUploadedBy());
-        dto.setCreatedAt(attachment.getCreatedAt());
+        dto.setUploadedAt(attachment.getUploadedAt());
         dto.setUpdatedAt(attachment.getUpdatedAt());
         return dto;
     }
+
+    public Attachment toDomain(UUID projectId, UUID taskId, AttachmentCreateRequestDto dto, UUID uploadedBy) {
+
+        Attachment attachment = new Attachment();
+
+        attachment.setProjectId(projectId);
+        attachment.setTaskId(taskId);
+
+        attachment.setFileName(dto.getFileName());
+        attachment.setFileUrl(dto.getFileUrl());
+
+        attachment.setUploadedBy(uploadedBy);
+        attachment.setUploadedAt(Instant.now());
+        attachment.setUpdatedAt(Instant.now());
+
+        return attachment;
+    }
+
 }
 

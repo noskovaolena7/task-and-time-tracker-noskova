@@ -1,5 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.service;
 
+import com.olenanoskova.task_and_time_tracker.controller.dto.ProjectDeadlineUpdateRequestDto;
 import com.olenanoskova.task_and_time_tracker.exception.InvalidDeadlineException;
 import com.olenanoskova.task_and_time_tracker.exception.ProjectDeadlineNotFoundException;
 import com.olenanoskova.task_and_time_tracker.exception.ProjectNotFoundException;
@@ -63,32 +64,18 @@ public class ProjectDeadlineServiceImpl implements ProjectDeadlineService {
     }
 
     @Override
-    public ProjectDeadline updateDeadline(UUID id, ProjectDeadline deadline) {
+    public ProjectDeadline updateDeadline(UUID projectId, UUID deadlineId, ProjectDeadlineUpdateRequestDto request) {
 
-        ProjectDeadlineEntity entity = projectDeadlineRepository.findById(id)
-                .orElseThrow(() -> new ProjectDeadlineNotFoundException(id));
+        ProjectDeadlineEntity entity = projectDeadlineRepository.findById(deadlineId)
+                .orElseThrow(() -> new ProjectDeadlineNotFoundException(deadlineId));
 
-        if (deadline.getDeadline() == null) {
-            throw new InvalidDeadlineException("Deadline cannot be null");
-        }
-
-        entity.setDeadline(deadline.getDeadline());
-        entity.setReminderPeriods(deadline.getReminderPeriods());
-        entity.setCreatedBy(deadline.getCreatedBy());
+        entity.setDeadline(request.getDeadline());
+        entity.setTitle(request.getTitle());
         entity.setUpdatedAt(Instant.now());
 
         ProjectDeadlineEntity saved = projectDeadlineRepository.save(entity);
-
         return projectDeadlineMapper.toDomain(saved);
     }
 
-    @Override
-    public void deleteDeadline(UUID id) {
 
-        if (!projectDeadlineRepository.existsById(id)) {
-            throw new ProjectDeadlineNotFoundException(id);
-        }
-
-        projectDeadlineRepository.deleteById(id);
-    }
 }

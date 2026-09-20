@@ -4,12 +4,14 @@ import com.olenanoskova.task_and_time_tracker.controller.dto.CompanyCreateReques
 import com.olenanoskova.task_and_time_tracker.controller.dto.CompanyUpdateRequestDto;
 import com.olenanoskova.task_and_time_tracker.controller.dto.CompanyResponseDto;
 import com.olenanoskova.task_and_time_tracker.mapper.CompanyMapper;
+import com.olenanoskova.task_and_time_tracker.security.SecurityService;
 import com.olenanoskova.task_and_time_tracker.service.CompanyService;
 import com.olenanoskova.task_and_time_tracker.service.model.Company;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,8 +24,10 @@ public class CompanyController {
 
     private final CompanyService companyService;
     private final CompanyMapper companyMapper;
+    private final SecurityService securityService;
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<CompanyResponseDto> createCompany(
             @Valid @RequestBody CompanyCreateRequestDto request) {
 
@@ -35,6 +39,7 @@ public class CompanyController {
     }
 
     @GetMapping
+    @PreAuthorize("@securityService.canListUsers()")
     public ResponseEntity<List<CompanyResponseDto>> getAllCompanies() {
 
         List<Company> companies = companyService.getCompanies();
@@ -46,6 +51,7 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@securityService.canAccessUser(#id)")
     public ResponseEntity<CompanyResponseDto> getCompanyById(@PathVariable UUID id) {
 
         Company company = companyService.getCompanyById(id);
@@ -55,6 +61,7 @@ public class CompanyController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@securityService.hasCompanyRole(#id, securityService.getCurrentUserId(), 'OWNER')")
     public ResponseEntity<CompanyResponseDto> updateCompany(
             @PathVariable UUID id,
             @Valid @RequestBody CompanyUpdateRequestDto request) {
@@ -68,6 +75,7 @@ public class CompanyController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@securityService.hasCompanyRole(#id, securityService.getCurrentUserId(), 'OWNER')")
     public ResponseEntity<Void> deleteCompany(@PathVariable UUID id) {
         companyService.deleteCompany(id);
         return ResponseEntity.noContent().build();

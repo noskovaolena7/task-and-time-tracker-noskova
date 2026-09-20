@@ -7,13 +7,16 @@ import java.util.UUID;
 
 public interface AttachmentService {
 
-    Attachment uploadAttachment(UUID taskId, Attachment attachment);
+        Attachment uploadAttachment(UUID taskId, Attachment attachment);
 
-    List<Attachment> getAttachmentsForTask(UUID taskId);
+        List<Attachment> getAttachmentsForTask(UUID taskId);
 
-    Attachment getAttachmentById(UUID id);
+        Attachment getAttachmentById(UUID id);
 
-    Attachment updateAttachment(UUID id, Attachment attachment);
+        UUID getProjectIdByTaskId(UUID taskId);
 
-    void deleteAttachment(UUID id);
-}
+        Attachment updateAttachment(UUID attachmentId, Attachment attachment);
+
+        void deleteAttachment(UUID taskId, UUID attachmentId);
+    }
+

@@ -1,5 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.service;
 
+import com.olenanoskova.task_and_time_tracker.service.model.Role;
 import com.olenanoskova.task_and_time_tracker.service.model.User;
 
 import java.util.List;
@@ -22,6 +23,9 @@ public interface UserService {
     User blockUser(UUID id);
 
     User updateUser(UUID id, User user);
+
+    User updateRole(UUID userId, Role newRole);
+    ;
 
     void delete(UUID id);
 

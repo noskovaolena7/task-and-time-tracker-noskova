@@ -17,17 +17,23 @@ public class AttachmentEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private UUID taskId;
+    @Column(nullable = false)
+    private UUID projectId;
 
+    private UUID taskId; // може бути null
+
+    @Column(nullable = false)
     private String fileName;
 
+    @Column(nullable = false)
     private String fileUrl;
 
+    @Column(name = "uploaded_by", nullable = false)
     private UUID uploadedBy;
 
-    @Column(name = "created_at")
-    private Instant createdAt;
+    @Column(name = "uploaded_at", nullable = false)
+    private Instant uploadedAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 }

@@ -9,6 +9,16 @@ import java.util.UUID;
 
 public interface ProjectMemberRepository extends JpaRepository<ProjectMemberEntity, UUID> {
     Optional<ProjectMemberEntity> findByProjectIdAndUserId(UUID projectId, UUID userId);
-
     List<ProjectMemberEntity> findByProjectId(UUID projectId);
+    boolean existsByProjectIdAndUserId(UUID projectId, UUID userId);
+    List<ProjectMemberEntity> findByUserId(UUID userId);
+
+    default List<UUID> findProjectIdsByUserId(UUID userId) {
+        return findByUserId(userId).stream()
+                .map(ProjectMemberEntity::getProjectId)
+                .toList();
+    }
+
+    void deleteByProjectIdAndUserId(UUID projectId, UUID userId);
+
 }

@@ -1,13 +1,13 @@
 package com.olenanoskova.task_and_time_tracker.service;
 
+import com.olenanoskova.task_and_time_tracker.controller.dto.RegisterCompanyRequestDto;
+import com.olenanoskova.task_and_time_tracker.controller.dto.RegisterUserRequestDto;
 import com.olenanoskova.task_and_time_tracker.exception.AccountIsBlockedException;
 import com.olenanoskova.task_and_time_tracker.exception.InvalidCredentialsException;
 import com.olenanoskova.task_and_time_tracker.mapper.UserMapper;
 import com.olenanoskova.task_and_time_tracker.repository.UserRepository;
 import com.olenanoskova.task_and_time_tracker.repository.entity.UserEntity;
-import com.olenanoskova.task_and_time_tracker.service.model.User;
-import com.olenanoskova.task_and_time_tracker.service.model.Role;
-import com.olenanoskova.task_and_time_tracker.service.model.Status;
+import com.olenanoskova.task_and_time_tracker.service.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -23,49 +23,85 @@ public class AuthServiceImpl implements AuthService {
     private final TokenService tokenService;
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserService userService;
+    private final CompanyService companyService;
+    private final UserCompanyRoleService userCompanyRoleService;
     private final UserMapper userMapper;
 
 
+    @Override
+    public String signUpPersonalUser(RegisterUserRequestDto request) {
+
+        log.info("Attempting to register personal user with email {}", request.getEmail());
+
+        User user = userMapper.toDomain(request);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(Role.PERSONAL_USER);
+
+        User createdUser = userService.createUser(user);
+        String token = tokenService.createToken(createdUser.getId().toString(), Role.PERSONAL_USER);
+
+        log.info("Successfully registered personal user with email {}", createdUser.getEmail());
+        return token;
+    }
 
     @Override
-    public String signUp(User user) {
+    public String signUpCompanyUser(RegisterCompanyRequestDto request) {
 
-        log.info("Attempting to sign-up user with email {}", user.getEmail());
+        log.info("Attempting to register company user with email {}", request.getEmail());
 
-        // User createdUser = userService.createUser(user)
-        //String token = tokenService.createToken(createdUser.getId().toString(), Role.WORKER);
+        User user = userMapper.toDomain(request);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(Role.COMPANY_USER);
+
         User createdUser = userService.createUser(user);
-        String token = tokenService.createToken(createdUser.getId().toString(), Role.USER);
 
-        log.info("Successfully created the user with email {}", user.getEmail());
+        Company company = new Company();
+        company.setName(request.getCompanyName());
+        company.setDescription(request.getCompanyDescription());
+
+        Company createdCompany = companyService.createCompany(company);
+
+        UserCompanyRole ownerRole = new UserCompanyRole();
+        ownerRole.setUserId(createdUser.getId());
+        ownerRole.setCompanyId(createdCompany.getId());
+        ownerRole.setRole(MemberRole.OWNER);
+
+        userCompanyRoleService.assignRole(createdCompany.getId(), ownerRole);
+        userService.updateRole(createdUser.getId(), Role.OWNER);
+
+        String token = tokenService.createToken(createdUser.getId().toString(), Role.OWNER);
+
+        log.info("Successfully registered company user {} and created company {}",
+                createdUser.getEmail(), createdCompany.getName());
 
         return token;
     }
 
     @Override
-    public String loginUser(String email, String password) {
+    public String login(String email, String password) {
 
         log.info("Attempting to login user with email {}", email);
 
         UserEntity userEntity = userRepository.findByEmail(email)
                 .orElseThrow(InvalidCredentialsException::new);
+
         User user = userMapper.toDomain(userEntity);
 
-        boolean passwordMatches = passwordEncoder.matches(password, user.getPassword());
-
-        if (!passwordMatches) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new InvalidCredentialsException();
         }
+
         if (user.getStatus() == Status.BLOCKED) {
             throw new AccountIsBlockedException();
         }
 
-        String token = tokenService.createToken(user.getId().toString(), Role.USER);
+        String token = tokenService.createToken(
+                user.getId().toString(),
+                user.getRole()
+        );
 
-        log.info("Successfully login the user with email {}", email);
-
-        return  token;
+        log.info("Successfully logged in user {}", email);
+        return token;
     }
-
 
 }

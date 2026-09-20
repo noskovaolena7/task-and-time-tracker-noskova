@@ -8,6 +8,7 @@ import com.olenanoskova.task_and_time_tracker.repository.AttachmentRepository;
 import com.olenanoskova.task_and_time_tracker.repository.TaskRepository;
 import com.olenanoskova.task_and_time_tracker.repository.UserRepository;
 import com.olenanoskova.task_and_time_tracker.repository.entity.AttachmentEntity;
+import com.olenanoskova.task_and_time_tracker.repository.entity.TaskEntity;
 import com.olenanoskova.task_and_time_tracker.service.model.Attachment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -43,7 +43,7 @@ public class AttachmentServiceImpl implements AttachmentService {
         }
 
         attachment.setTaskId(taskId);
-        attachment.setCreatedAt(Instant.now());
+        attachment.setUploadedAt(Instant.now());
         attachment.setUpdatedAt(Instant.now());
 
         AttachmentEntity entity = attachmentMapper.toEntity(attachment);
@@ -78,17 +78,19 @@ public class AttachmentServiceImpl implements AttachmentService {
     }
 
     @Override
-    public Attachment updateAttachment(UUID id, Attachment attachment) {
+    public UUID getProjectIdByTaskId(UUID taskId) {
+        return taskRepository.findById(taskId)
+                .map(TaskEntity::getProjectId)
+                .orElseThrow(() -> new TaskNotFoundException(taskId));
+    }
 
-        log.info("Attempting to update attachment {}", id);
+    @Override
+    public Attachment updateAttachment(UUID attachmentId, Attachment attachment) {
 
-        Optional<AttachmentEntity> optionalAttachment = attachmentRepository.findById(id);
+        log.info("Attempting to update attachment {}", attachmentId);
 
-        if (optionalAttachment.isEmpty()) {
-            throw new AttachmentNotFoundException(id);
-        }
-
-        AttachmentEntity entity = optionalAttachment.get();
+        AttachmentEntity entity = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new AttachmentNotFoundException(attachmentId));
 
         if (attachment.getFileName() != null) {
             entity.setFileName(attachment.getFileName());
@@ -103,22 +105,22 @@ public class AttachmentServiceImpl implements AttachmentService {
 
         AttachmentEntity saved = attachmentRepository.save(entity);
 
-        log.info("Successfully updated attachment {}", id);
+        log.info("Successfully updated attachment {}", attachmentId);
 
         return attachmentMapper.toDomain(saved);
     }
 
     @Override
-    public void deleteAttachment(UUID id) {
+    public void deleteAttachment(UUID taskId, UUID attachmentId) {
 
-        log.info("Attempting to delete attachment {}", id);
+        log.info("Attempting to delete attachment {}", attachmentId);
 
-        if (!attachmentRepository.existsById(id)) {
-            throw new AttachmentNotFoundException(id);
+        if (!attachmentRepository.existsById(attachmentId)) {
+            throw new AttachmentNotFoundException(attachmentId);
         }
 
-        attachmentRepository.deleteById(id);
+        attachmentRepository.deleteById(attachmentId);
 
-        log.info("Successfully deleted attachment {}", id);
+        log.info("Successfully deleted attachment {}", attachmentId);
     }
 }

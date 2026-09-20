@@ -23,8 +23,10 @@ public class TaskEntity {
 
     private UUID projectId;
 
+    @Column(name = "created_by", nullable = false)
     private UUID createdBy;
 
+    @Column(name = "assigned_to")
     private UUID assignedTo;
 
     @Column(name = "due_date")
@@ -44,4 +46,5 @@ public class TaskEntity {
 
     @Column(name = "updated_at")
     private Instant updatedAt;
+
 }

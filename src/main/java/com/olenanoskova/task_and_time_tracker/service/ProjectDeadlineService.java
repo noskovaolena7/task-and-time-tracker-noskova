@@ -1,5 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.service;
 
+import com.olenanoskova.task_and_time_tracker.controller.dto.ProjectDeadlineUpdateRequestDto;
 import com.olenanoskova.task_and_time_tracker.service.model.ProjectDeadline;
 
 import java.util.List;
@@ -13,7 +14,5 @@ public interface ProjectDeadlineService {
 
     ProjectDeadline getDeadlineById(UUID id);
 
-    ProjectDeadline updateDeadline(UUID id, ProjectDeadline deadline);
-
-    void deleteDeadline(UUID id);
+    ProjectDeadline updateDeadline(UUID projectId, UUID deadlineId, ProjectDeadlineUpdateRequestDto request);
 }

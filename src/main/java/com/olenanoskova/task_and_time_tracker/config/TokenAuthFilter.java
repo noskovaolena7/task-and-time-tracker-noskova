@@ -50,7 +50,7 @@ public class TokenAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        String id = tokenService.getId(jwt);
+        String id = tokenService.getUserId(jwt);
         Role userUpperBoundaryRole = tokenService.getRole(jwt);
 
         List<GrantedAuthority> authorities = new ArrayList<>();

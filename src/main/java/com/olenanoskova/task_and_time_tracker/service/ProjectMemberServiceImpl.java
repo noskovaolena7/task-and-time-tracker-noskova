@@ -111,16 +111,20 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
-    public void deleteMember(UUID id) {
+    public void deleteMember(UUID projectId, UUID userId) {
 
-        log.info("Attempting to delete project member with id {}", id);
+        log.info("Attempting to delete member {} from project {}", userId, projectId);
 
-        if (!projectMemberRepository.existsById(id)) {
-            throw new ProjectMemberNotFoundException(id);
+        Optional<ProjectMemberEntity> existing =
+                projectMemberRepository.findByProjectIdAndUserId(projectId, userId);
+
+        if (existing.isEmpty()) {
+            throw new ProjectMemberNotFoundException(userId);
         }
 
-        projectMemberRepository.deleteById(id);
+        projectMemberRepository.deleteByProjectIdAndUserId(projectId, userId);
 
-        log.info("Successfully deleted project member with id {}", id);
+        log.info("Successfully deleted member {} from project {}", userId, projectId);
     }
+
 }
