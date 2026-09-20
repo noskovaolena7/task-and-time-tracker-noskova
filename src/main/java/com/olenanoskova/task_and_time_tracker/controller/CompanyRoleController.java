@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class CompanyRoleController {
     private final UserCompanyRoleMapper roleMapper;
 
     @GetMapping
+    @PreAuthorize("@securityService.canAccessUser(#companyId)")
     public ResponseEntity<List<UserCompanyRoleResponseDto>> getRoles(@PathVariable UUID companyId) {
         List<UserCompanyRole> roles = roleService.getRoles(companyId);
         List<UserCompanyRoleResponseDto> responseList = roles.stream()
@@ -34,6 +36,7 @@ public class CompanyRoleController {
     }
 
     @PostMapping
+    @PreAuthorize("@securityService.hasCompanyRole(#companyId, securityService.getCurrentUserId(), 'OWNER')")
     public ResponseEntity<UserCompanyRoleResponseDto> createRole(
             @PathVariable UUID companyId,
             @Valid @RequestBody UserCompanyRoleCreateRequestDto request) {

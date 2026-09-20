@@ -2,6 +2,7 @@ package com.olenanoskova.task_and_time_tracker.service;
 
 
 
+import com.olenanoskova.task_and_time_tracker.exception.InvalidCredentialsException;
 import com.olenanoskova.task_and_time_tracker.service.model.Role;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -9,10 +10,15 @@ import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import javax.crypto.SecretKey;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
+@RequiredArgsConstructor
 public class TokenServiceImpl implements TokenService {
 
     private static final String CLAIM_ROLE = "role";
@@ -24,19 +30,18 @@ public class TokenServiceImpl implements TokenService {
     private Long jwtTtlMillis;
 
     @Override
-    public String createToken(String id, Role role) {
+    public String createToken(String userId, Role role) {
 
         // Calculate the expiration date based on the current time and expiration time in milliseconds
         Date now = new Date();
         Date expiration = new Date(now.getTime() + jwtTtlMillis);
 
         // Build JWT claims
-        Claims claims =
-                Jwts.claims()
+        Claims claims = Jwts.claims()
                         .issuedAt(now)
                         .expiration(expiration)
-                        .subject(id)
-                        .add(CLAIM_ROLE, role.toString())
+                        .subject(userId)
+                        .add(CLAIM_ROLE, role.name())
                         .build();
 
         // Create and sign the JWT token
@@ -48,15 +53,14 @@ public class TokenServiceImpl implements TokenService {
 
         try {
             Jwts.parser().verifyWith(getSecretKey()).build().parseSignedClaims(token);
+            return true;
         } catch (Exception e) {
             return false;
         }
-
-        return true;
     }
 
     @Override
-    public String getId(String token) {
+    public String getUserId(String token) {
 
         return Jwts.parser()
                 .verifyWith(getSecretKey())
@@ -77,7 +81,12 @@ public class TokenServiceImpl implements TokenService {
                         .getPayload()
                         .get(CLAIM_ROLE, String.class);
 
-        return Role.valueOf(typeValue);
+        try {
+            return Role.valueOf(typeValue);
+        } catch (IllegalArgumentException e) {
+            log.error("Invalid role value in token: {}", typeValue);
+            throw new InvalidCredentialsException();
+        }
     }
 
     private SecretKey getSecretKey() {

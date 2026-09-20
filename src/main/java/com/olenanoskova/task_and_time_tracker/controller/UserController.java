@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -25,6 +26,7 @@ public class UserController {
     private final UserMapper userMapper;
 
     @PostMapping
+    @PreAuthorize("@securityService.canCreateUser(#request.companyId)")
     public ResponseEntity<UserResponseDto> createUser(
             @Valid @RequestBody UserCreateRequestDto request) {
 
@@ -36,6 +38,7 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("@securityService.canListUsers()")
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
 
         List<User> users = userService.getUsers();
@@ -47,6 +50,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@securityService.canAccessUser(#id)")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {
 
         User user = userService.getUserById(id);
@@ -56,6 +60,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@securityService.canUpdateUser(#id)")
     public ResponseEntity<UserResponseDto> updateUser(
             @PathVariable UUID id,
             @Valid @RequestBody UserUpdateRequestDto request) {
@@ -69,6 +74,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@securityService.canDeleteUser(#id)")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
 
         userService.delete(id);

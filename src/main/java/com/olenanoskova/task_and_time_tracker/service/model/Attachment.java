@@ -12,11 +12,19 @@ import java.util.UUID;
 @NoArgsConstructor
 public class Attachment {
     private UUID id;
+
+    private UUID projectId;
+
     private UUID taskId;
+
     private String fileName;
+
     private String fileUrl;
+
     private UUID uploadedBy;
-    private Instant createdAt;
+
+    private Instant uploadedAt;
+
     private Instant updatedAt;
 }
 

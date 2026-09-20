@@ -10,5 +10,12 @@ import java.util.UUID;
 public interface UserCompanyRoleRepository extends JpaRepository<UserCompanyRoleEntity, UUID> {
     List<UserCompanyRoleEntity> findByCompanyId(UUID companyId);
     Optional<UserCompanyRoleEntity> findByUserIdAndCompanyId(UUID userId, UUID companyId);
+    boolean existsByCompanyIdAndUserId(UUID companyId, UUID userId);
+    Optional<UserCompanyRoleEntity> findByCompanyIdAndUserId(UUID companyId, UUID userId);
+    Optional<UserCompanyRoleEntity> findFirstByUserId(UUID userId);
+
+    default Optional<UUID> findCompanyIdByUserId(UUID userId) {
+        return findFirstByUserId(userId).map(UserCompanyRoleEntity::getCompanyId);
+    }
 }
 

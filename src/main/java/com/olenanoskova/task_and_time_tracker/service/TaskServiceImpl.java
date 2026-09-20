@@ -191,4 +191,11 @@ public class TaskServiceImpl implements TaskService {
 
         log.info("Successfully deleted task with id {}", id);
     }
+
+    @Override
+    public UUID getProjectIdByTaskId(UUID taskId) {
+        TaskEntity task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Task not found"));
+        return task.getProjectId();
+    }
 }

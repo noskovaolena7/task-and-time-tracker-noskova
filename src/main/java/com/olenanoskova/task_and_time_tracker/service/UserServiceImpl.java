@@ -5,6 +5,7 @@ import com.olenanoskova.task_and_time_tracker.exception.UserAlreadyExistExceptio
 import com.olenanoskova.task_and_time_tracker.exception.UserNotFoundException;
 import com.olenanoskova.task_and_time_tracker.mapper.UserMapper;
 import com.olenanoskova.task_and_time_tracker.repository.UserRepository;
+import com.olenanoskova.task_and_time_tracker.repository.entity.RoleEntity;
 import com.olenanoskova.task_and_time_tracker.repository.entity.StatusEntity;
 import com.olenanoskova.task_and_time_tracker.repository.entity.UserEntity;
 import com.olenanoskova.task_and_time_tracker.service.model.User;
@@ -123,4 +124,17 @@ public class UserServiceImpl implements UserService {
 
         userRepository.deleteById(id);
     }
+
+    @Override
+    public User updateRole(UUID userId, Role newRole) {
+        UserEntity entity = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        entity.setRole(RoleEntity.valueOf(newRole.name()));
+
+        UserEntity saved = userRepository.save(entity);
+
+        return userMapper.toDomain(saved);
+    }
+
 }

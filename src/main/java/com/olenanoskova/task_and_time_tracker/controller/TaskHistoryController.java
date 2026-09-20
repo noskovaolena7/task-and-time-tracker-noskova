@@ -6,6 +6,7 @@ import com.olenanoskova.task_and_time_tracker.service.TaskHistoryService;
 import com.olenanoskova.task_and_time_tracker.service.model.TaskHistory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,11 +21,12 @@ public class TaskHistoryController {
     private final TaskHistoryMapper taskHistoryMapper;
 
     @GetMapping
+    @PreAuthorize("@securityService.canAccessTask(#taskId)")
     public ResponseEntity<List<TaskHistoryResponseDto>> getTaskHistory(@PathVariable UUID taskId) {
         List<TaskHistory> taskHistories = taskHistoryService.getTaskHistory(taskId);
-        List<TaskHistoryResponseDto> taskHistoryDtos = taskHistoryMapper.toDtoList(taskHistories);
+        List<TaskHistoryResponseDto> taskHistoryDto = taskHistoryMapper.toDtoList(taskHistories);
 
-        return ResponseEntity.ok(taskHistoryDtos);
+        return ResponseEntity.ok(taskHistoryDto);
     }
 
 }

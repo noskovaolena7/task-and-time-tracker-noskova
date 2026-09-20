@@ -1,5 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.service;
 
+import com.olenanoskova.task_and_time_tracker.repository.entity.TaskEntity;
 import com.olenanoskova.task_and_time_tracker.service.model.Task;
 
 import java.util.List;
@@ -16,4 +17,8 @@ public interface TaskService {
     Task updateTask(UUID id, Task task);
 
     void deleteTask(UUID id);
+
+    UUID getProjectIdByTaskId(UUID taskId);
+
+
 }

@@ -15,5 +15,6 @@ public interface ProjectMemberService {
 
     ProjectMember updateMember(UUID id, ProjectMember member);
 
-    void deleteMember(UUID id);
+    void deleteMember(UUID projectId, UUID userId);
+
 }

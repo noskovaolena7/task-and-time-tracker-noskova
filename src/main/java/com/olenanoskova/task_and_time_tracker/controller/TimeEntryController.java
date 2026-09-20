@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -24,6 +25,7 @@ public class TimeEntryController {
     private final TimeEntryMapper timeEntryMapper;
 
     @GetMapping
+    @PreAuthorize("@securityService.canAccessTask(#taskId)")
     public ResponseEntity<List<TimeEntryResponseDto>> getAllTimeEntriesForTask(@PathVariable UUID taskId) {
         List<TimeEntry> timeEntries = timeEntryService.getTimeEntries(taskId);
         List<TimeEntryResponseDto> responseList = timeEntries.stream()
@@ -34,6 +36,7 @@ public class TimeEntryController {
     }
 
     @PostMapping
+    @PreAuthorize("@securityService.canAccessTask(#taskId)")
     public ResponseEntity<TimeEntryResponseDto> createTimeEntryForTask(
             @PathVariable UUID taskId,
             @Valid @RequestBody TimeEntryCreateRequestDto request) {

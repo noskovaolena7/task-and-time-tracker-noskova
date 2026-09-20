@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +24,9 @@ public class TaskController {
     private final TaskService taskService;
     private final TaskMapper taskMapper;
 
+
     @PostMapping
+    @PreAuthorize("@securityService.canCreateTask(#request.projectId)")
     public ResponseEntity<TaskResponseDto> createTask(@Valid @RequestBody TaskCreateRequestDto request) {
         Task task = taskMapper.toDomain(request);
         Task createdTask = taskService.createTask(task);
@@ -33,6 +36,7 @@ public class TaskController {
     }
 
     @GetMapping
+    @PreAuthorize("@securityService.canAccessTask(#projectId)")
     public ResponseEntity<List<TaskResponseDto>> getAllTasks(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
@@ -49,6 +53,7 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@securityService.canAccessTask(#id)")
     public ResponseEntity<TaskResponseDto> getTaskById(@PathVariable UUID id) {
         Task task = taskService.getTaskById(id);
         TaskResponseDto response = taskMapper.toDto(task);
@@ -57,6 +62,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@securityService.canAccessTask(#id)")
     public ResponseEntity<TaskResponseDto> updateTask(@PathVariable UUID id, @Valid @RequestBody TaskUpdateRequestDto request) {
         Task task = taskService.getTaskById(id);
         taskMapper.updateDomain(request, task);
@@ -67,6 +73,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@securityService.canDeleteTask(#id)")
     public ResponseEntity<Void> deleteTask(@PathVariable UUID id) {
         taskService.deleteTask(id);
         return ResponseEntity.noContent().build();

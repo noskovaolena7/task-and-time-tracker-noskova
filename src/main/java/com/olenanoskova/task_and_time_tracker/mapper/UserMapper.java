@@ -88,6 +88,28 @@ public class UserMapper {
         dto.setMemberRole(MemberRoleDto.valueOf(user.getRole().name()));
         return dto;
     }
+
+    public User toDomain(RegisterUserRequestDto dto) {
+        User user = new User();
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
+        user.setEmail(dto.getEmail());
+        user.setPassword(dto.getPassword());
+        user.setPhoneNumber(dto.getPhoneNumber());
+        return user;
+    }
+
+    public User toDomain(RegisterCompanyRequestDto dto) {
+        User user = new User();
+        user.setFirstName(dto.getFirstName());
+        user.setLastName(dto.getLastName());
+        user.setEmail(dto.getEmail());
+        user.setPassword(dto.getPassword());
+        user.setPhoneNumber(dto.getPhoneNumber());
+        return user;
+    }
+
+
 }
 
 
