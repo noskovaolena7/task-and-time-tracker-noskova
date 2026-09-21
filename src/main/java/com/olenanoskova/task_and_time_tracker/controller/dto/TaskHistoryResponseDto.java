@@ -1,71 +1,35 @@
 package com.olenanoskova.task_and_time_tracker.controller.dto;
 
+import jakarta.validation.constraints.*;
+import lombok.Data;
+
 import java.time.Instant;
 import java.util.UUID;
 
+@Data
 public class TaskHistoryResponseDto {
 
+    @NotNull(message = "History ID cannot be null")
     private UUID id;
+
+    @NotNull(message = "Task ID cannot be null")
     private UUID taskId;
+
+    @NotNull(message = "User ID cannot be null")
     private UUID userId;
+
+    @NotBlank(message = "Changed field name cannot be blank")
+    @Size(max = 100, message = "Changed field name must be <= 100 characters")
     private String fieldChanged;
+
+    @Size(max = 2000, message = "Old value must be <= 2000 characters")
     private String oldValue;
+
+    @Size(max = 2000, message = "New value must be <= 2000 characters")
     private String newValue;
+
+    @NotNull(message = "Change timestamp cannot be null")
     private Instant changedAt;
 
-    public UUID getId() {
-        return id;
-    }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getTaskId() {
-        return taskId;
-    }
-
-    public void setTaskId(UUID taskId) {
-        this.taskId = taskId;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
-
-    public String getFieldChanged() {
-        return fieldChanged;
-    }
-
-    public void setFieldChanged(String fieldChanged) {
-        this.fieldChanged = fieldChanged;
-    }
-
-    public String getOldValue() {
-        return oldValue;
-    }
-
-    public void setOldValue(String oldValue) {
-        this.oldValue = oldValue;
-    }
-
-    public String getNewValue() {
-        return newValue;
-    }
-
-    public void setNewValue(String newValue) {
-        this.newValue = newValue;
-    }
-
-    public Instant getChangedAt() {
-        return changedAt;
-    }
-
-    public void setChangedAt(Instant changedAt) {
-        this.changedAt = changedAt;
-    }
 }

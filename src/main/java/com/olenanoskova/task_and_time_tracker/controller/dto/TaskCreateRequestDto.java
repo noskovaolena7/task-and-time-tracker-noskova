@@ -1,80 +1,40 @@
 package com.olenanoskova.task_and_time_tracker.controller.dto;
 
+import jakarta.validation.constraints.*;
+import lombok.Data;
+
 import java.time.Instant;
 import java.util.UUID;
 
+@Data
 public class TaskCreateRequestDto {
 
-    private UUID projectId;
-    private String title;
-    private String description;
-    private String status;
-    private String priority;
-    private UUID createdBy;
-    private UUID assignedTo;
-    private Instant dueDate;
+        @NotNull(message = "Project ID is required")
+        private UUID projectId;
 
-    public UUID getProjectId() {
-        return projectId;
-    }
+        @NotBlank(message = "Task title cannot be blank")
+        @Size(min = 2, max = 200, message = "Task title must be between 2 and 200 characters")
+        private String title;
 
-    public void setProjectId(UUID projectId) {
-        this.projectId = projectId;
-    }
+        @Size(max = 2000, message = "Description must be <= 2000 characters")
+        private String description;
 
-    public String getTitle() {
-        return title;
-    }
+        @NotBlank(message = "Status cannot be blank")
+        @Size(max = 50, message = "Status must be <= 50 characters")
+        private String status;
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
+        @NotBlank(message = "Priority cannot be blank")
+        @Size(max = 50, message = "Priority must be <= 50 characters")
+        private String priority;
 
-    public String getDescription() {
-        return description;
-    }
+        @NotNull(message = "Creator ID is required")
+        private UUID createdBy;
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+        // може бути null — задача може бути не призначена
+        private UUID assignedTo;
 
-    public String getStatus() {
-        return status;
-    }
+        // може бути null — дедлайн не обов’язковий
+        private Instant dueDate;
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getPriority() {
-        return priority;
-    }
-
-    public void setPriority(String priority) {
-        this.priority = priority;
-    }
-
-    public UUID getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(UUID createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public UUID getAssignedTo() {
-        return assignedTo;
-    }
-
-    public void setAssignedTo(UUID assignedTo) {
-        this.assignedTo = assignedTo;
-    }
-
-    public Instant getDueDate() {
-        return dueDate;
-    }
-
-    public void setDueDate(Instant dueDate) {
-        this.dueDate = dueDate;
-    }
+   
 }

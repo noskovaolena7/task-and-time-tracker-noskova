@@ -1,35 +1,22 @@
 package com.olenanoskova.task_and_time_tracker.controller.dto;
 
+import jakarta.validation.constraints.*;
+import lombok.Data;
+
 import java.time.Instant;
 import java.util.UUID;
 
+@Data
 public class TaskReminderCreateRequestDto {
 
+    @NotNull(message = "Reminder timestamp cannot be null")
     private Instant remindAt;
+
+    @NotNull(message = "Creator ID is required")
     private UUID createdBy;
+
+    @NotBlank(message = "Reminder message cannot be blank")
+    @Size(max = 500, message = "Reminder message must be <= 500 characters")
     private String message;
 
-    public Instant getRemindAt() {
-        return remindAt;
-    }
-
-    public void setRemindAt(Instant remindAt) {
-        this.remindAt = remindAt;
-    }
-
-    public UUID getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(UUID createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
 }

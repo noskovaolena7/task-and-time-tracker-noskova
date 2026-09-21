@@ -1,71 +1,33 @@
 package com.olenanoskova.task_and_time_tracker.controller.dto;
 
+import jakarta.validation.constraints.*;
+import lombok.Data;
+
 import java.time.Instant;
 import java.util.UUID;
-
+@Data
 public class ProjectResponseDto {
 
-    private UUID id;
-    private UUID companyId;
-    private String name;
-    private String description;
-    private UUID createdBy;
-    private Instant createdAt;
-    private Instant updatedAt;
+        @NotNull(message = "Project ID cannot be null")
+        private UUID id;
 
-    public UUID getId() {
-        return id;
-    }
+        @NotNull(message = "Company ID cannot be null")
+        private UUID companyId;
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
+        @NotBlank(message = "Project name cannot be blank")
+        @Size(max = 100, message = "Project name must be <= 100 characters")
+        private String name;
 
-    public UUID getCompanyId() {
-        return companyId;
-    }
+        @Size(max = 1000, message = "Description must be <= 1000 characters")
+        private String description;
 
-    public void setCompanyId(UUID companyId) {
-        this.companyId = companyId;
-    }
+        @NotNull(message = "Creator ID cannot be null")
+        private UUID createdBy;
 
-    public String getName() {
-        return name;
-    }
+        @NotNull(message = "Creation timestamp cannot be null")
+        private Instant createdAt;
 
-    public void setName(String name) {
-        this.name = name;
-    }
+        private Instant updatedAt;
 
-    public String getDescription() {
-        return description;
-    }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public UUID getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(UUID createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

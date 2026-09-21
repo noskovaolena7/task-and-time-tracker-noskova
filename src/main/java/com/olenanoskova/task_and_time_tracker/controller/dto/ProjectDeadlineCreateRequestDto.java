@@ -1,5 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.controller.dto;
 
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 
@@ -9,7 +10,19 @@ import java.util.UUID;
 
 @Data
 public class ProjectDeadlineCreateRequestDto {
+
+
+    @NotNull(message = "Deadline timestamp is required")
     private Instant deadline;
-    private List<String> reminderPeriods;
+
+    @NotNull(message = "Reminder periods list cannot be null")
+    @Size(max = 20, message = "Reminder periods list must contain <= 20 items")
+    private List<
+            @NotBlank(message = "Reminder period cannot be blank")
+            @Size(max = 50, message = "Reminder period must be <= 50 characters")
+                    String
+            > reminderPeriods;
+
+    @NotNull(message = "Creator ID is required")
     private UUID createdBy;
 }
