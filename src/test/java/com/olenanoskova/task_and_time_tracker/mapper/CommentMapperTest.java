@@ -1,0 +1,1 @@
+package com.olenanoskova.task_and_time_tracker.mapper;import org.junit.jupiter.api.Test;import static org.junit.jupiter.api.Assertions.*;class CommentMapperTest{ CommentMapper mapper=new CommentMapper(); @Test void smoke(){assertNotNull(mapper);} }

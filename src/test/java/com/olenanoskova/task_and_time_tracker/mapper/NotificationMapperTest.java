@@ -1,0 +1,1 @@
+package com.olenanoskova.task_and_time_tracker.mapper;import org.junit.jupiter.api.Test;import static org.junit.jupiter.api.Assertions.*;class NotificationMapperTest{ NotificationMapper mapper=new NotificationMapper(); @Test void smoke(){assertNotNull(mapper);} }
