@@ -57,3 +57,12 @@ databaseChangeLog:
             path: 008-attachments-changes.sql
             relativeToChangelogFile: true
 
+  - changeSet:
+      id: 009-rebuild-schema
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 009-rebuild-schema.sql
+            relativeToChangelogFile: true
+
+

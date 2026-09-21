@@ -9,7 +9,6 @@ import java.util.UUID;
 @Data
 public class TaskReminderResponseDto {
 
-
     @NotNull(message = "Reminder ID cannot be null")
     private UUID id;
 
@@ -27,6 +26,4 @@ public class TaskReminderResponseDto {
 
     // може бути null, якщо нагадування ще не редагували
     private Instant updatedAt;
-
-
 }

@@ -30,6 +30,4 @@ public class TaskHistoryResponseDto {
 
     @NotNull(message = "Change timestamp cannot be null")
     private Instant changedAt;
-
-
 }
