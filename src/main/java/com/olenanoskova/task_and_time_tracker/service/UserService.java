@@ -10,10 +10,6 @@ public interface UserService {
 
     User createUser(User user);
 
-    User registerPersonalUser(User user);
-    
-    User registerCompanyOwner(User user, UUID companyId);
-
     List<User> getUsers();
 
     User getUserById(UUID id);
@@ -25,7 +21,8 @@ public interface UserService {
     User updateUser(UUID id, User user);
 
     User updateRole(UUID userId, Role newRole);
-    ;
+
+    void updateUserWorkspace(UUID userId, UUID workspaceId);
 
     void delete(UUID id);
 

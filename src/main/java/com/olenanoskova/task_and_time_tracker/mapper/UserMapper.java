@@ -7,35 +7,11 @@ import com.olenanoskova.task_and_time_tracker.repository.entity.UserEntity;
 import com.olenanoskova.task_and_time_tracker.service.model.User;
 import com.olenanoskova.task_and_time_tracker.service.model.Role;
 import com.olenanoskova.task_and_time_tracker.service.model.Status;
-import jakarta.validation.Valid;
 import org.springframework.stereotype.Component;
-
 import java.time.Instant;
 
 @Component
 public class UserMapper {
-
-    // DTO → Domain (Create)
-    public User toDomain(@Valid SignUpRequestDto dto) {
-        User user = new User();
-        user.setFirstName(dto.getFirstName());
-        user.setLastName(dto.getLastName());
-        user.setEmail(dto.getEmail());
-        user.setPassword(dto.getPassword());
-        user.setPhoneNumber(dto.getPhoneNumber());
-        return user;
-    }
-
-    public User toDomain(UserCreateRequestDto dto) {
-
-            User user = new User();
-            user.setFirstName(dto.getFirstName());
-            user.setLastName(dto.getLastName());
-            user.setEmail(dto.getEmail());
-            user.setPassword(dto.getPassword());
-            user.setPhoneNumber(dto.getPhoneNumber());
-            return user;
-    }
 
     // DTO → Domain (Update)
     public void updateDomain(UserUpdateRequestDto dto, User user) {
