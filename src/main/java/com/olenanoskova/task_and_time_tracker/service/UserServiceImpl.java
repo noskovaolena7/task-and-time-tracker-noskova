@@ -53,7 +53,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public List<User> getUsers() {
+    public List<User> getUsers(UUID companyId) {
         List<UserEntity> entities = userRepository.findAll();
         return entities.stream()
                 .map(userMapper::toDomain)

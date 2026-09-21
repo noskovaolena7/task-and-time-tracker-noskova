@@ -3,6 +3,7 @@ package com.olenanoskova.task_and_time_tracker.controller;
 import com.olenanoskova.task_and_time_tracker.controller.dto.UserResponseDto;
 import com.olenanoskova.task_and_time_tracker.controller.dto.UserUpdateRequestDto;
 import com.olenanoskova.task_and_time_tracker.mapper.UserMapper;
+import com.olenanoskova.task_and_time_tracker.security.SecurityService;
 import com.olenanoskova.task_and_time_tracker.service.UserService;
 import com.olenanoskova.task_and_time_tracker.service.model.User;
 import jakarta.validation.Valid;
@@ -25,13 +26,19 @@ public class UserController {
 
     private final UserService userService;
     private final UserMapper userMapper;
+    private final SecurityService securityService;
 
 
     @GetMapping
     @PreAuthorize("@securityService.canListUsers()")
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
 
-        List<User> users = userService.getUsers();
+
+        UUID companyId = securityService.getCurrentUserId();
+        if (companyId == null) {
+            throw new RuntimeException("Company not found");
+        }
+        List<User> users = userService.getUsers(companyId);
         List<UserResponseDto> responseList = users.stream()
                 .map(userMapper::toDto)
                 .toList();

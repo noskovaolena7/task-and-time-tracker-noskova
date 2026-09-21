@@ -2,4 +2,4 @@
 --changeset Olena:002
 
 ALTER TABLE users
-    ADD COLUMN workspace_id UUID;
+    ADD COLUMN IF NOT EXISTS workspace_id UUID;

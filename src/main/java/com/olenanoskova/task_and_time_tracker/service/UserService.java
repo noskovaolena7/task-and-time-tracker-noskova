@@ -10,7 +10,7 @@ public interface UserService {
 
     User createUser(User user);
 
-    List<User> getUsers();
+    List<User> getUsers(UUID companyId);
 
     User getUserById(UUID id);
 

@@ -7,13 +7,6 @@ databaseChangeLog:
             path: 001-create-schema.sql
             relativeToChangelogFile: true
 
-  - changeSet:
-      id: 002
-      author: Olena
-      changes:
-        - sqlFile:
-            path: 002-add-workspace-id.sql
-            relativeToChangelogFile: true
 
   - changeSet:
       id: 003
@@ -26,8 +19,41 @@ databaseChangeLog:
   - changeSet:
       id: 004
       author: Olena
+      validCheckSum: 9:6caf09bbf8e980610227eea8fb44b011
       changes:
         - sqlFile:
             path: 004-create-invites.sql
+            relativeToChangelogFile: true
+
+  - changeSet:
+      id: 005
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 005-users-changes.sql
+            relativeToChangelogFile: true
+
+  - changeSet:
+      id: 006
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 006-companies-changes.sql
+            relativeToChangelogFile: true
+
+  - changeSet:
+      id: 007
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 007-create-workspaces.sql
+            relativeToChangelogFile: true
+
+  - changeSet:
+      id: 008
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 008-attachments-changes.sql
             relativeToChangelogFile: true
 

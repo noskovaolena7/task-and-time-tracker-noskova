@@ -400,5 +400,12 @@ public class SecurityService {
 
         return tokenService.getRole(token);
     }
+    public UUID getCurrentUserCompanyId() {
+        UUID userId = getCurrentUserId();
+        if (userId == null) return null;
+
+        return userCompanyRoleRepository.findCompanyIdByUserId(userId).orElse(null);
+    }
+
 
 }
