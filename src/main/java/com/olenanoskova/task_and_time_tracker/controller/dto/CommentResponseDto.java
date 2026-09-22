@@ -1,62 +1,33 @@
 package com.olenanoskova.task_and_time_tracker.controller.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Data;
+
 import java.time.Instant;
 import java.util.UUID;
 
+@Data
 public class CommentResponseDto {
 
+    @NotNull(message = "Comment ID cannot be null")
     private UUID id;
+
+    @NotNull(message = "Task ID cannot be null")
     private UUID taskId;
+
+    @NotNull(message = "User ID cannot be null")
     private UUID userId;
+
+    @NotBlank(message = "Comment text cannot be blank")
+    @Size(max = 1000, message = "Comment text must be <= 1000 characters")
     private String text;
+
+    @NotNull(message = "Creation timestamp cannot be null")
     private Instant createdAt;
+
+    // updatedAt може бути null, якщо коментар ще не редагували
     private Instant updatedAt;
 
-    public UUID getId() {
-        return id;
-    }
-
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getTaskId() {
-        return taskId;
-    }
-
-    public void setTaskId(UUID taskId) {
-        this.taskId = taskId;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
-
-    public String getText() {
-        return text;
-    }
-
-    public void setText(String text) {
-        this.text = text;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

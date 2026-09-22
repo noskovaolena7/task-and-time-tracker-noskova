@@ -41,6 +41,9 @@ public class UserEntity {
     @Column(name = "workspace_id")
     private UUID workspaceId;
 
+    @Column(name = "company_id")
+    private UUID companyId;
+
     @Column(name = "created_at")
     private Instant createdAt;
 

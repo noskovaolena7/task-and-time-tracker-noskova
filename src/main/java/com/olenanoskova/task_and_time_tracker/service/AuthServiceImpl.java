@@ -7,6 +7,7 @@ import com.olenanoskova.task_and_time_tracker.exception.InvalidCredentialsExcept
 import com.olenanoskova.task_and_time_tracker.mapper.UserMapper;
 import com.olenanoskova.task_and_time_tracker.repository.UserRepository;
 import com.olenanoskova.task_and_time_tracker.repository.entity.UserEntity;
+import com.olenanoskova.task_and_time_tracker.repository.entity.WorkspaceEntity;
 import com.olenanoskova.task_and_time_tracker.service.model.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class AuthServiceImpl implements AuthService {
     private final CompanyService companyService;
     private final UserCompanyRoleService userCompanyRoleService;
     private final UserMapper userMapper;
+    private final WorkspaceService workspaceService;
 
 
     @Override
@@ -38,7 +40,10 @@ public class AuthServiceImpl implements AuthService {
         user.setRole(Role.PERSONAL_USER);
 
         User createdUser = userService.createUser(user);
-        String token = tokenService.createToken(createdUser.getId().toString(), Role.PERSONAL_USER);
+        WorkspaceEntity ws = workspaceService.createPersonalWorkspace(createdUser.getId());
+        createdUser.setWorkspaceId(ws.getId());
+        userService.updateUserWorkspace(createdUser.getId(), ws.getId());
+        String token = tokenService.createToken(createdUser.getId().toString(), createdUser.getRole());
 
         log.info("Successfully registered personal user with email {}", createdUser.getEmail());
         return token;
@@ -60,6 +65,10 @@ public class AuthServiceImpl implements AuthService {
         company.setDescription(request.getCompanyDescription());
 
         Company createdCompany = companyService.createCompany(company);
+
+        WorkspaceEntity ws = workspaceService.createCompanyWorkspace(createdUser.getId(), createdCompany.getId());
+        createdUser.setWorkspaceId(ws.getId());
+        userService.updateUserWorkspace(createdUser.getId(), ws.getId());
 
         UserCompanyRole ownerRole = new UserCompanyRole();
         ownerRole.setUserId(createdUser.getId());

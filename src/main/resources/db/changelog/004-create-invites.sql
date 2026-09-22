@@ -1,7 +1,7 @@
 --liquibase formatted sql
 --changeset Olena:004
 
-CREATE TABLE invites (
+CREATE TABLE IF NOT EXISTS invites (
 
     id UUID PRIMARY KEY,
     company_id UUID,

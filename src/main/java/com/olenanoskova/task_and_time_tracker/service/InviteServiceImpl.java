@@ -22,7 +22,7 @@ public class InviteServiceImpl implements InviteService {
         invite.setCode(UUID.randomUUID().toString());
         invite.setExpiresAt(
                 Instant.now().plus(7, java.time.temporal.ChronoUnit.DAYS));
-        invite.setRole(MemberRoleEntity.WORKER);
+        invite.setRole(MemberRoleEntity.USER);
         return inviteRepository.save(invite);
     }
 

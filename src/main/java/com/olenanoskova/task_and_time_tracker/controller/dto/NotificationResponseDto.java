@@ -1,107 +1,47 @@
 package com.olenanoskova.task_and_time_tracker.controller.dto;
 
+import jakarta.validation.constraints.*;
+import lombok.Data;
+
 import java.time.Instant;
 import java.util.UUID;
-
+@Data
 public class NotificationResponseDto {
 
+    @NotNull(message = "Notification ID cannot be null")
     private UUID id;
+
+    @NotNull(message = "User ID cannot be null")
     private UUID userId;
+
+    // projectId може бути null, якщо нотифікація не прив'язана до проєкту
     private UUID projectId;
+
+    // taskId може бути null, якщо нотифікація не прив'язана до задачі
     private UUID taskId;
+
+    @NotBlank(message = "Notification type cannot be blank")
+    @Size(max = 100, message = "Notification type must be <= 100 characters")
     private String type;
+
+    @NotBlank(message = "Notification message cannot be blank")
+    @Size(max = 1000, message = "Notification message must be <= 1000 characters")
     private String message;
+
+    @NotNull(message = "Read status cannot be null")
     private Boolean isRead;
+
+    // scheduledAt може бути null, якщо нотифікація не запланована
     private Instant scheduledAt;
+
+    // sentAt може бути null, якщо нотифікація ще не відправлена
     private Instant sentAt;
+
+    @NotNull(message = "Creation timestamp cannot be null")
     private Instant createdAt;
+
+    // updatedAt може бути null, якщо нотифікацію ще не редагували
     private Instant updatedAt;
 
-    public UUID getId() {
-        return id;
-    }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public UUID getUserId() {
-        return userId;
-    }
-
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
-
-    public UUID getProjectId() {
-        return projectId;
-    }
-
-    public void setProjectId(UUID projectId) {
-        this.projectId = projectId;
-    }
-
-    public UUID getTaskId() {
-        return taskId;
-    }
-
-    public void setTaskId(UUID taskId) {
-        this.taskId = taskId;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public Boolean getIsRead() {
-        return isRead;
-    }
-
-    public void setIsRead(Boolean isRead) {
-        this.isRead = isRead;
-    }
-
-    public Instant getScheduledAt() {
-        return scheduledAt;
-    }
-
-    public void setScheduledAt(Instant scheduledAt) {
-        this.scheduledAt = scheduledAt;
-    }
-
-    public Instant getSentAt() {
-        return sentAt;
-    }
-
-    public void setSentAt(Instant sentAt) {
-        this.sentAt = sentAt;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public Instant getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(Instant updatedAt) {
-        this.updatedAt = updatedAt;
-    }
 }

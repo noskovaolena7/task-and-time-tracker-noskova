@@ -1,7 +1,7 @@
 --liquibase formatted sql
 --changeset Olena:003
 
-CREATE TABLE workspaces (
+CREATE TABLE IF NOT EXISTS workspaces (
     id UUID PRIMARY KEY,
     name TEXT,
     type TEXT,
@@ -10,3 +10,6 @@ CREATE TABLE workspaces (
     created_at TIMESTAMP,
     updated_at TIMESTAMP
 );
+
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS workspace_id UUID;

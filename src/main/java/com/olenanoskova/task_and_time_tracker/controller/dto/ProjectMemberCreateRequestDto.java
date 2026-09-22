@@ -1,25 +1,19 @@
 package com.olenanoskova.task_and_time_tracker.controller.dto;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
+import lombok.Data;
+
 import java.util.UUID;
 
+@Data
 public class ProjectMemberCreateRequestDto {
 
-     private UUID userId;
-     private MemberRoleDto memberRoleDto;
+    @NotNull(message = "User ID is required")
+    private UUID userId;
 
-    public UUID getUserId() {
-        return userId;
-    }
+    @NotNull(message = "Member role is required")
+    @Valid
+    private MemberRoleDto memberRoleDto;
 
-    public void setUserId(UUID userId) {
-        this.userId = userId;
-    }
-
-    public MemberRoleDto getMemberRoleDto() {
-        return memberRoleDto;
-    }
-
-    public void setMemberRoleDto(MemberRoleDto memberRoleDto) {
-        this.memberRoleDto = memberRoleDto;
-    }
 }
