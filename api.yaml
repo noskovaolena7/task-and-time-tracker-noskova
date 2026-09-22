@@ -40,6 +40,8 @@ tags:
     description: Deadlines for projects
   - name: Task Reminders
     description: Reminders for tasks
+  - name: Invites
+    description: Company invites
 
 paths:
 
@@ -345,7 +347,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"   # CHANGED
+                $ref: "#/components/schemas/User"
         400:
           description: Bad Request
           content:
@@ -612,7 +614,6 @@ paths:
           name: status
           schema:
             type: string
-            enum: [ OPEN, IN_PROGRESS, DONE, CANCELED ]
         - in: query
           name: project_id
           schema:
@@ -1169,6 +1170,61 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /invites:
+    post:
+      tags: [ Invites ]
+      summary: Create invite
+      description: Create an invite for a company.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteCreateRequest"
+      responses:
+        201:
+          description: Invite created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invite"
+        400:
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /invites/{code}/accept:
+    post:
+      tags: [ Invites ]
+      summary: Accept invite by code
+      description: Accept an invite and join the company.
+      parameters:
+        - in: path
+          name: code
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Invite accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Company"
+        400:
+          description: Invalid or expired invite
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Invite not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 components:
 
   parameters:
@@ -1310,6 +1366,18 @@ components:
           type: string
           required: true
           example: +417612312312
+        status:
+          type: string
+          enum: [ ACTIVE, BLOCKED, DELETED ]
+        role:
+            type: string
+            enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
+        workspace_id:
+            type: string
+            format: uuid
+        company_id:
+            type: string
+            format: uuid
         created_at:
           type: string
           format: date-time
@@ -1344,6 +1412,12 @@ components:
           type: string
           required: true
           example: +417612312312
+        status:
+          type: string
+          enum: [ ACTIVE, BLOCKED, DELETED ]
+        role:
+            type: string
+            enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
 
     UserUpdateRequest:
       type: object
@@ -1363,6 +1437,12 @@ components:
           format: uuid
         name:
           type: string
+        owner_id:
+          type: string
+          format: uuid
+        workspace_id:
+            type: string
+            format: uuid
         created_at:
           type: string
           format: date-time
@@ -1391,7 +1471,7 @@ components:
           format: uuid
         role:
           type: string
-          enum: [ USER, MANAGER, ADMIN, OWNER ]
+          enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
         created_at:
           type: string
           format: date-time
@@ -1408,7 +1488,7 @@ components:
           format: uuid
         role:
           type: string
-          enum: [ USER, MANAGER, ADMIN, OWNER ]
+          enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
 
     Project:
       type: object
@@ -1527,13 +1607,7 @@ components:
 
     TaskCreateRequest:
       type: object
-      required:
-        - project_id
-        - title
-        - description
-        - status
-        - priority
-        - created_by
+      required: [ project_id, title, description, status, priority ]
       properties:
         project_id:
           type: string
@@ -1690,6 +1764,9 @@ components:
           format: uuid
         type:
           type: string
+        status:
+          type: string
+          enum: [ SENT, DELIVERED, READ, FAILED ]
         message:
           type: string
         is_read:
@@ -1732,11 +1809,22 @@ components:
         id:
           type: string
           format: uuid
+        project_id:
+          type: string
+          format: uuid
         task_id:
           type: string
           format: uuid
+        file_name:
+          type: string
         file_url:
           type: string
+        owner_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-tim
         uploaded_by:
           type: string
           format: uuid
@@ -1819,6 +1907,60 @@ components:
         created_by:
           type: string
           format: uuid
+
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        owner_id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Invite:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        company_id:
+          type: string
+          format: uuid
+        code:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        role:
+          type: string
+          enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
+
+
+    InviteCreateRequest:
+      type: object
+      required:
+          - company_id
+          - role
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
+
 
     Error:
       type: object

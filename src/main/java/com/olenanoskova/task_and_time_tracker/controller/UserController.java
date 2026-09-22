@@ -34,7 +34,7 @@ public class UserController {
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
 
 
-        UUID companyId = securityService.getCurrentUserId();
+        UUID companyId = securityService.getCurrentUserCompanyId();
         if (companyId == null) {
             throw new RuntimeException("Company not found");
         }
