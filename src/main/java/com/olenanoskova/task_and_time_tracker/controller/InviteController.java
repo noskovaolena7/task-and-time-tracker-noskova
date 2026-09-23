@@ -29,7 +29,8 @@ public class InviteController {
     public ResponseEntity<InviteResponseDto> createInvite(
             @Valid @RequestBody InviteCreateRequestDto request) {
 
-        InviteEntity invite = inviteService.generateInvite(request.getCompanyId());
+        UUID creatorId = securityService.getCurrentUserId();
+        InviteEntity invite = inviteService.generateInvite(request.getCompanyId(), creatorId);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDto(invite));
     }
 

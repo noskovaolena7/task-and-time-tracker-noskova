@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public interface InviteService {
 
-    InviteEntity generateInvite(UUID companyId);
+    InviteEntity generateInvite(UUID companyId, UUID invitedBy);
 
     UUID resolveCompany(String inviteCode);
 

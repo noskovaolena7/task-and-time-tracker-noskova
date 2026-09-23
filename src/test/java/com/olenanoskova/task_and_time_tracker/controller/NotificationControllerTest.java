@@ -27,6 +27,12 @@ class NotificationControllerTest {
     @Mock
     com.olenanoskova.task_and_time_tracker.mapper.NotificationMapper mapper;
 
+    @Mock
+    com.olenanoskova.task_and_time_tracker.security.SecurityService securityService;
+
+    @Mock
+    com.olenanoskova.task_and_time_tracker.service.UserService userService;
+
     @InjectMocks
     com.olenanoskova.task_and_time_tracker.controller.NotificationController controller;
 
@@ -87,5 +93,34 @@ class NotificationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(notificationId.toString()))
                 .andExpect(jsonPath("$.isRead").value(true));
+    }
+
+    @Test
+    void sendMessage_returns201() throws Exception {
+        UUID userId = UUID.randomUUID();
+
+        var req = new com.olenanoskova.task_and_time_tracker.controller.dto.NotificationCreateRequestDto();
+        req.setMessage("Hello, colleague");
+
+        var notif = new com.olenanoskova.task_and_time_tracker.service.model.Notification();
+        notif.setId(UUID.randomUUID());
+        notif.setUserId(userId);
+        notif.setMessage("Hello, colleague");
+
+        var dto = new com.olenanoskova.task_and_time_tracker.controller.dto.NotificationResponseDto();
+        dto.setId(notif.getId());
+        dto.setMessage("Hello, colleague");
+
+        var om = new com.fasterxml.jackson.databind.ObjectMapper();
+        when(securityService.getCurrentUserId()).thenReturn(UUID.randomUUID());
+        when(service.createNotification(any(com.olenanoskova.task_and_time_tracker.service.model.Notification.class)))
+                .thenReturn(notif);
+        when(mapper.toDto(notif)).thenReturn(dto);
+
+        mvc.perform(post("/users/{userId}/notifications", userId.toString())
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("Hello, colleague"));
     }
 }

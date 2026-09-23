@@ -24,13 +24,14 @@ public class InviteServiceImpl implements InviteService {
     private final UserCompanyRoleRepository userCompanyRoleRepository;
 
     @Override
-    public InviteEntity generateInvite(UUID companyId) {
+    public InviteEntity generateInvite(UUID companyId, UUID invitedBy) {
         InviteEntity invite = new InviteEntity();
         invite.setCompanyId(companyId);
         invite.setCode(UUID.randomUUID().toString());
         invite.setExpiresAt(
                 Instant.now().plus(7, java.time.temporal.ChronoUnit.DAYS));
         invite.setRole(MemberRoleEntity.USER);
+        invite.setInvitedBy(invitedBy);
         return inviteRepository.save(invite);
     }
 
@@ -69,6 +70,7 @@ public class InviteServiceImpl implements InviteService {
         membership.setUserId(userId);
         membership.setCompanyId(companyId);
         membership.setRole(invite.getRole() != null ? invite.getRole() : MemberRoleEntity.USER);
+        membership.setInvitedBy(invite.getInvitedBy());
         membership.setCreatedAt(Instant.now());
         membership.setUpdatedAt(Instant.now());
         userCompanyRoleRepository.save(membership);

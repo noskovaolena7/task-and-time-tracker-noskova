@@ -15,6 +15,7 @@ public class UserCompanyRole {
     private UUID userId;
     private UUID companyId;
     private MemberRole role;
+    private UUID invitedBy;
     private Instant createdAt;
     private Instant updatedAt;
 }

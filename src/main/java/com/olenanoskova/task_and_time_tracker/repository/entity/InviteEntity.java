@@ -25,4 +25,7 @@ public class InviteEntity {
 
     @Enumerated(EnumType.STRING)
     private MemberRoleEntity role; // WORKER by default
+
+    @Column(name = "invited_by")
+    private UUID invitedBy;
 }

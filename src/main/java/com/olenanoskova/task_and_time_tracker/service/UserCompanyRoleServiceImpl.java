@@ -28,6 +28,8 @@ public class UserCompanyRoleServiceImpl implements UserCompanyRoleService {
     private final UserCompanyRoleRepository roleRepository;
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
+    private final com.olenanoskova.task_and_time_tracker.repository.ProjectRepository projectRepository;
+    private final com.olenanoskova.task_and_time_tracker.repository.ProjectMemberRepository projectMemberRepository;
     private final UserCompanyRoleMapper roleMapper;
 
     @Override
@@ -113,8 +115,75 @@ public class UserCompanyRoleServiceImpl implements UserCompanyRoleService {
     }
 
     @Override
-    public void deleteRole(UUID id) {
+    public List<com.olenanoskova.task_and_time_tracker.controller.dto.CompanyMemberDto> getMembers(UUID companyId) {
 
+        log.info("Fetching members with user details for company {}", companyId);
+
+        return roleRepository.findByCompanyId(companyId).stream()
+                .map(entity -> {
+                    com.olenanoskova.task_and_time_tracker.controller.dto.CompanyMemberDto dto =
+                            new com.olenanoskova.task_and_time_tracker.controller.dto.CompanyMemberDto();
+                    dto.setId(entity.getId());
+                    dto.setUserId(entity.getUserId());
+                    dto.setRole(com.olenanoskova.task_and_time_tracker.service.model.MemberRole
+                            .valueOf(entity.getRole().name()));
+                    userRepository.findById(entity.getUserId()).ifPresent(user -> {
+                        dto.setFirstName(user.getFirstName());
+                        dto.setLastName(user.getLastName());
+                        dto.setEmail(user.getEmail());
+                    });
+                    return dto;
+                })
+                .toList();
+    }
+
+    @Override
+    public List<com.olenanoskova.task_and_time_tracker.controller.dto.CompanyMemberDto> getVisibleMembers(
+            UUID companyId, UUID requesterId) {
+
+        List<com.olenanoskova.task_and_time_tracker.controller.dto.CompanyMemberDto> all =
+                getMembers(companyId);
+
+        String requesterRole = roleRepository.findByUserIdAndCompanyId(requesterId, companyId)
+                .map(r -> r.getRole().name())
+                .orElse(null);
+        if (requesterRole == null) {
+            return List.of();
+        }
+        if ("OWNER".equals(requesterRole) || "ADMIN".equals(requesterRole)) {
+            return all;
+        }
+
+        java.util.Set<UUID> visibleIds = new java.util.HashSet<>();
+        visibleIds.add(requesterId);
+        // The inviter.
+        all.stream()
+                .filter(m -> requesterId.equals(m.getUserId()))
+                .map(m -> findInviterId(companyId, requesterId))
+                .filter(java.util.Objects::nonNull)
+                .forEach(visibleIds::add);
+        // Coworkers sharing a company project with the requester.
+        for (var project : projectRepository.findByCompanyId(companyId)) {
+            if (projectMemberRepository.existsByProjectIdAndUserId(project.getId(), requesterId)) {
+                projectMemberRepository.findByProjectId(project.getId())
+                        .forEach(pm -> visibleIds.add(pm.getUserId()));
+            }
+        }
+
+        final var visible = visibleIds;
+        return all.stream()
+                .filter(m -> visible.contains(m.getUserId()))
+                .toList();
+    }
+
+    private UUID findInviterId(UUID companyId, UUID userId) {
+        return roleRepository.findByUserIdAndCompanyId(userId, companyId)
+                .map(com.olenanoskova.task_and_time_tracker.repository.entity.UserCompanyRoleEntity::getInvitedBy)
+                .orElse(null);
+    }
+
+    @Override
+    public void deleteRole(UUID id) {
         log.info("Attempting to delete UserCompanyRole with id {}", id);
 
         UserCompanyRoleEntity entity = roleRepository.findById(id)

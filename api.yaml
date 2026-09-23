@@ -268,6 +268,35 @@ paths:
         201:
           description: Created
 
+  /companies/{companyId}/members:
+    get:
+      summary: Company members with names
+      description: Roles joined with user details (first/last name, email) for display, search and role filtering. One call instead of N user lookups.
+      tags: [Company Roles]
+      parameters:
+        - $ref: "#/components/parameters/companyId"
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CompanyMember"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden (own companies only)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /companies/{companyId}/roles/{roleId}:
     put:
       summary: Change user role in company (promotion/demotion)
@@ -1121,6 +1150,44 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
+  /users/{userId}/notifications:
+    post:
+      summary: Send a message to a colleague
+      description: Team messaging. Sender is taken from the token. Recipient must share at least one company with the sender; strangers get 403.
+      tags: [Notifications]
+      parameters:
+        - $ref: "#/components/parameters/userId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationCreateRequest"
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden (no shared company)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
   /users/{userId}/upcoming:
     get:
       summary: Upcoming deadlines and reminders
@@ -1852,6 +1919,27 @@ components:
           enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
           description: PERSONAL_USER and COMPANY_USER are accepted and map to USER.
 
+    CompanyMember:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Role row id (for promotion/removal).
+        user_id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [ USER, MANAGER, ADMIN, OWNER ]
+
     Project:
       type: object
       properties:
@@ -2167,6 +2255,13 @@ components:
         overdue:
           type: boolean
 
+    NotificationCreateRequest:
+      type: object
+      required: [ message ]
+      properties:
+        message:
+          type: string
+
     Notification:
       type: object
       required: [ id, user_id, type, message, is_read, created_at ]
@@ -2177,6 +2272,15 @@ components:
         user_id:
           type: string
           format: uuid
+        sender_id:
+          type: string
+          format: uuid
+          description: Author of a team message; null for system notifications.
+        sender_name:
+          type: string
+        sender_email:
+          type: string
+          format: email
         project_id:
           type: string
           format: uuid

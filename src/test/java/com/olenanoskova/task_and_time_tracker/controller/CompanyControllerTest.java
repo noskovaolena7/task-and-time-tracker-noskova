@@ -87,7 +87,7 @@ class CompanyControllerTest {
 
     @Test
     void getAllCompanies_returns200_emptyList() throws Exception {
-        when(companyService.getCompanies()).thenReturn(java.util.List.of());
+        when(securityService.getCurrentUserCompanyIds()).thenReturn(java.util.List.of());
 
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/companies"))
                 .andExpect(status().isOk())

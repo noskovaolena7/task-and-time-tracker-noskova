@@ -23,6 +23,7 @@ public class SecurityService {
     private final ProjectRepository projectRepository;
     private final CompanyRepository companyRepository;
     private final WorkspaceRepository workspaceRepository;
+    private final NotificationRepository notificationRepository;
     private final CommentRepository commentRepository;
     private final TaskRepository taskRepository;
     private final AttachmentRepository attachmentRepository;
@@ -233,6 +234,44 @@ public class SecurityService {
         if (requesterId == null) return false;
 
         return requesterId.equals(targetUserId);
+    }
+
+    /**
+     * Authorizes team messaging:
+     * - OWNER (of any company) and ADMIN (of any company) may message anyone,
+     *   including each other;
+     * - anyone may always reply to someone who messaged them (a message from
+     *   X opens the dialog both ways);
+     * - project coworkers may message each other (even without a shared company).
+     * Merely sharing a company does NOT open a dialog: a USER cannot write
+     * first to someone uninvolved — they may only reply once written to.
+     */
+    public boolean canMessageUser(UUID targetUserId) {
+        UUID requesterId = getCurrentUserId();
+        if (requesterId == null || targetUserId == null) return false;
+        if (requesterId.equals(targetUserId)) return true;
+
+        if (isOwnerAnywhere(requesterId) || isAdminAnywhere(requesterId)) return true;
+
+        // Reply: the target messaged the requester before.
+        if (notificationRepository.existsByUserIdAndSenderId(requesterId, targetUserId)) {
+            return true;
+        }
+
+        // Project coworkers (personal or company projects alike).
+        List<UUID> requesterProjects = projectMemberRepository.findProjectIdsByUserId(requesterId);
+        List<UUID> targetProjects = projectMemberRepository.findProjectIdsByUserId(targetUserId);
+        return requesterProjects.stream().anyMatch(targetProjects::contains);
+    }
+
+    private boolean isOwnerAnywhere(UUID userId) {
+        return userCompanyRoleRepository.findCompanyIdsByUserId(userId).stream()
+                .anyMatch(companyId -> hasCompanyRole(companyId, userId, "OWNER"));
+    }
+
+    private boolean isAdminAnywhere(UUID userId) {
+        return userCompanyRoleRepository.findCompanyIdsByUserId(userId).stream()
+                .anyMatch(companyId -> hasCompanyRole(companyId, userId, "ADMIN"));
     }
 
     private List<UUID> sharedCompanyIds(UUID userA, UUID userB) {
@@ -580,6 +619,18 @@ public class SecurityService {
         return companyRepository.findById(companyId)
                 .map(company -> requesterId.equals(company.getOwnerId()))
                 .orElse(false);
+    }
+
+    /**
+     * Authorizes viewing the full role roster: OWNER or ADMIN only.
+     * Regular members use the filtered members endpoint instead.
+     */
+    public boolean canViewRoles(UUID companyId) {
+        UUID requesterId = getCurrentUserId();
+        if (requesterId == null || companyId == null) return false;
+
+        return hasCompanyRole(companyId, requesterId, "OWNER")
+                || hasCompanyRole(companyId, requesterId, "ADMIN");
     }
 
     /**

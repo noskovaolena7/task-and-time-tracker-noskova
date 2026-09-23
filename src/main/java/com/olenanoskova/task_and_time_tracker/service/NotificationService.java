@@ -26,4 +26,21 @@ public interface NotificationService {
     Notification updateNotification(UUID id, Notification notification);
 
     void deleteNotification(UUID id);
+
+    /**
+     * Messages sent by the user (outbox). Seen only by the sender.
+     */
+    List<Notification> getSentMessages(UUID userId);
+
+    /**
+     * Deletes a single message. Allowed for the recipient or the sender
+     * (sender retracts it for both sides).
+     */
+    void deleteUserNotification(UUID userId, UUID notificationId);
+
+    /**
+     * Deletes the whole conversation between two users (both directions).
+     * Allowed for either participant.
+     */
+    void deleteConversation(UUID userId, UUID otherUserId);
 }

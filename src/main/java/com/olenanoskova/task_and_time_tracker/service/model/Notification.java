@@ -13,6 +13,9 @@ import java.util.UUID;
 public class Notification {
     private UUID id;
     private UUID userId;
+    private UUID senderId;
+    private String senderName;
+    private String senderEmail;
     private UUID projectId;
     private UUID taskId;
     private NotificationStatus status;

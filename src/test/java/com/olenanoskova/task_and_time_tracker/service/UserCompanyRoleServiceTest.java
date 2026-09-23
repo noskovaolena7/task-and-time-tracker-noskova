@@ -37,6 +37,12 @@ class UserCompanyRoleServiceTest {
     private CompanyRepository companyRepository;
 
     @Mock
+    private com.olenanoskova.task_and_time_tracker.repository.ProjectRepository projectRepository;
+
+    @Mock
+    private com.olenanoskova.task_and_time_tracker.repository.ProjectMemberRepository projectMemberRepository;
+
+    @Mock
     private UserCompanyRoleMapper roleMapper;
 
     @InjectMocks
@@ -145,5 +151,78 @@ class UserCompanyRoleServiceTest {
 
         roleService.deleteRole(id);
         verify(roleRepository).deleteById(id);
+    }
+
+    @Test
+    void getMembers_joinsUserDetails() {        UUID companyId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        var entity = new com.olenanoskova.task_and_time_tracker.repository.entity.UserCompanyRoleEntity();
+        entity.setId(UUID.randomUUID());
+        entity.setUserId(userId);
+        entity.setCompanyId(companyId);
+        entity.setRole(com.olenanoskova.task_and_time_tracker.repository.entity.MemberRoleEntity.MANAGER);
+        var user = new com.olenanoskova.task_and_time_tracker.repository.entity.UserEntity();
+        user.setId(userId);
+        user.setFirstName("Ben");
+        user.setLastName("Muster");
+        user.setEmail("ben@example.com");
+
+        when(roleRepository.findByCompanyId(companyId)).thenReturn(java.util.List.of(entity));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        var members = roleService.getMembers(companyId);
+
+        assertEquals(1, members.size());
+        assertEquals("Ben", members.get(0).getFirstName());
+        assertEquals("Muster", members.get(0).getLastName());
+        assertEquals("ben@example.com", members.get(0).getEmail());
+        assertEquals(com.olenanoskova.task_and_time_tracker.service.model.MemberRole.MANAGER,
+                members.get(0).getRole());
+    }
+
+    @Test
+    void getVisibleMembers_userSeesOnlySelfInviterAndCoworkers() {
+        UUID companyId = UUID.randomUUID();
+        UUID me = UUID.randomUUID();
+        UUID inviter = UUID.randomUUID();
+        UUID stranger = UUID.randomUUID();
+        // (fully-qualified names used below for brevity of imports)
+        com.olenanoskova.task_and_time_tracker.repository.entity.UserCompanyRoleEntity meRow =
+                new com.olenanoskova.task_and_time_tracker.repository.entity.UserCompanyRoleEntity();
+        meRow.setId(UUID.randomUUID());
+        meRow.setUserId(me);
+        meRow.setCompanyId(companyId);
+        meRow.setRole(com.olenanoskova.task_and_time_tracker.repository.entity.MemberRoleEntity.USER);
+        meRow.setInvitedBy(inviter);
+
+        com.olenanoskova.task_and_time_tracker.repository.entity.UserCompanyRoleEntity inviterRow =
+                new com.olenanoskova.task_and_time_tracker.repository.entity.UserCompanyRoleEntity();
+        inviterRow.setId(UUID.randomUUID());
+        inviterRow.setUserId(inviter);
+        inviterRow.setCompanyId(companyId);
+        inviterRow.setRole(com.olenanoskova.task_and_time_tracker.repository.entity.MemberRoleEntity.OWNER);
+
+        com.olenanoskova.task_and_time_tracker.repository.entity.UserCompanyRoleEntity strangerRow =
+                new com.olenanoskova.task_and_time_tracker.repository.entity.UserCompanyRoleEntity();
+        strangerRow.setId(UUID.randomUUID());
+        strangerRow.setUserId(stranger);
+        strangerRow.setCompanyId(companyId);
+        strangerRow.setRole(com.olenanoskova.task_and_time_tracker.repository.entity.MemberRoleEntity.USER);
+
+        when(roleRepository.findByCompanyId(companyId))
+                .thenReturn(java.util.List.of(meRow, inviterRow, strangerRow));
+        when(roleRepository.findByUserIdAndCompanyId(me, companyId))
+                .thenReturn(Optional.of(meRow));
+        when(userRepository.findById(me)).thenReturn(Optional.of(new com.olenanoskova.task_and_time_tracker.repository.entity.UserEntity()));
+        when(userRepository.findById(inviter)).thenReturn(Optional.of(new com.olenanoskova.task_and_time_tracker.repository.entity.UserEntity()));
+        when(userRepository.findById(stranger)).thenReturn(Optional.of(new com.olenanoskova.task_and_time_tracker.repository.entity.UserEntity()));
+        when(projectRepository.findByCompanyId(companyId)).thenReturn(java.util.List.of());
+
+        var visible = roleService.getVisibleMembers(companyId, me);
+
+        assertEquals(2, visible.size());
+        assertTrue(visible.stream().anyMatch(m -> me.equals(m.getUserId())));
+        assertTrue(visible.stream().anyMatch(m -> inviter.equals(m.getUserId())));
+        assertTrue(visible.stream().noneMatch(m -> stranger.equals(m.getUserId())));
     }
 }

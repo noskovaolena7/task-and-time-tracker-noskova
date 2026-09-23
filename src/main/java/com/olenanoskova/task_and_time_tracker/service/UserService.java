@@ -14,6 +14,11 @@ public interface UserService {
 
     User getUserById(UUID id);
 
+    /**
+     * Resolves a user id by email for message addressing.
+     * Throws when nobody has this email.
+     */
+    UUID getUserIdByEmail(String email);
     User activateUser(UUID id);
 
     User blockUser(UUID id);
