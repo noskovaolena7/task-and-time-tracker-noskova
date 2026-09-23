@@ -23,7 +23,7 @@ public class TaskEntity {
 
     private UUID projectId;
 
-    @Column(name = "created_by", nullable = false)
+    @Column(name = "created_by")
     private UUID createdBy;
 
     @Column(name = "assigned_to")

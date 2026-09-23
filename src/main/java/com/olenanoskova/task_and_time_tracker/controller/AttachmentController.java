@@ -62,7 +62,7 @@ public class AttachmentController {
             @PathVariable UUID taskId,
             @PathVariable UUID attachmentId,
             @Valid @RequestBody AttachmentCreateRequestDto requestDto,
-            @AuthenticationPrincipal CustomUserDetails user   // ← додано
+            @AuthenticationPrincipal CustomUserDetails user   // added
     ) {
         UUID projectId = attachmentService.getProjectIdByTaskId(taskId);
         Attachment updated = attachmentService.updateAttachment(
@@ -77,7 +77,7 @@ public class AttachmentController {
     public ResponseEntity<Void> deleteAttachment(
             @PathVariable UUID taskId,
             @PathVariable UUID attachmentId,
-            @AuthenticationPrincipal CustomUserDetails user   // ← додано
+            @AuthenticationPrincipal CustomUserDetails user   // added
     ) {
 
         attachmentService.deleteAttachment(taskId, attachmentId);

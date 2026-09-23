@@ -30,6 +30,6 @@ public class CompanyResponseDto {
     @NotNull(message = "Creation timestamp cannot be null")
     private Instant createdAt;
 
-    // updatedAt може бути null, якщо компанію ще не редагували
+    // updatedAt may be null if the company has not been edited yet
     private Instant updatedAt;
 }

@@ -30,7 +30,7 @@ public class TimeEntryResponseDto {
     @NotNull(message = "Creation timestamp cannot be null")
     private Instant createdAt;
 
-    // може бути null, якщо запис ще не редагували
+    // may be null if the entry has not been edited yet
     private Instant updatedAt;
 
 }

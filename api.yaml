@@ -486,13 +486,20 @@ paths:
                   $ref: "#/components/schemas/Error"
 
     delete:
-      summary: Delete user
+      summary: Delete own account
+      description: Only the account owner may delete it. Personal projects, tasks and workspaces are deleted with the account; company projects created by the user remain (author becomes empty). Company owners must transfer ownership first (400 otherwise). Removing someone else from a company is done via company roles, not here.
       tags: [Users]
       parameters:
         - $ref: "#/components/parameters/userId"
       responses:
         204:
           description: Deleted
+        400:
+          description: Bad Request (e.g. ownership not transferred)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
 
   /projects:
@@ -1014,6 +1021,41 @@ paths:
                 $ref: "#/components/schemas/Error"
 
 
+  /tasks/{taskId}/comments/{commentId}:
+    delete:
+      summary: Delete comment (author or task manager)
+      tags: [Comments]
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+        - in: path
+          name: commentId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: Deleted
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+
   /tasks/{taskId}/history:
     get:
       summary: Get task history
@@ -1074,6 +1116,43 @@ paths:
                 $ref: "#/components/schemas/Error"
         404:
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /users/{userId}/upcoming:
+    get:
+      summary: Upcoming deadlines and reminders
+      description: Aggregated across own personal projects and all own companies (overdue + next N days, sorted). Powers the dashboard widget.
+      tags: [Users]
+      parameters:
+        - $ref: "#/components/parameters/userId"
+        - in: query
+          name: days
+          schema:
+            type: integer
+            default: 7
+        - in: query
+          name: size
+          schema:
+            type: integer
+            default: 20
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Upcoming"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden (only own items)
           content:
             application/json:
               schema:
@@ -1410,6 +1489,40 @@ paths:
                 $ref: "#/components/schemas/Error"
         401:
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /tasks/{taskId}/reminders/{reminderId}:
+    delete:
+      summary: Delete reminder
+      tags: [Task Reminders]
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+        - in: path
+          name: reminderId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: Deleted
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -1998,6 +2111,61 @@ components:
         changed_at:
           type: string
           format: date-time
+
+    Upcoming:
+      type: object
+      properties:
+        deadlines:
+          type: array
+          items:
+            $ref: "#/components/schemas/UpcomingDeadline"
+        reminders:
+          type: array
+          items:
+            $ref: "#/components/schemas/UpcomingReminder"
+
+    UpcomingDeadline:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        project_id:
+          type: string
+          format: uuid
+        project_name:
+          type: string
+        title:
+          type: string
+        deadline:
+          type: string
+          format: date-time
+        overdue:
+          type: boolean
+
+    UpcomingReminder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        task_id:
+          type: string
+          format: uuid
+        task_title:
+          type: string
+        project_id:
+          type: string
+          format: uuid
+        project_name:
+          type: string
+        remind_at:
+          type: string
+          format: date-time
+        message:
+          type: string
+        overdue:
+          type: boolean
 
     Notification:
       type: object

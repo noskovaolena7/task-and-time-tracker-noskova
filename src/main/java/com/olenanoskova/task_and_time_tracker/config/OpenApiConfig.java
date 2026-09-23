@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 /***
- * Перейдіть у браузері за посиланням
+ * Open in your browser at
  * http://localhost:8080/swagger-ui/index.html
  *
  * JSON naming (SNAKE_CASE, as documented in api.yaml) is configured globally via

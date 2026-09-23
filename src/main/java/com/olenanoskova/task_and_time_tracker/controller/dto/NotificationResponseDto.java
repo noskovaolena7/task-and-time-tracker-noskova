@@ -15,13 +15,13 @@ public class NotificationResponseDto {
     @NotNull(message = "User ID cannot be null")
     private UUID userId;
 
-    // projectId може бути null, якщо нотифікація не прив'язана до проєкту
+    // projectId may be null if the notification is not linked to a project
     private UUID projectId;
 
-    // taskId може бути null, якщо нотифікація не прив'язана до задачі
+    // taskId may be null if the notification is not linked to a task
     private UUID taskId;
 
-    // status може бути null для нотифікацій, створених до міграції 010
+    // status may be null for notifications created before migration 010
     private NotificationStatus status;
 
     @NotBlank(message = "Notification type cannot be blank")
@@ -35,16 +35,16 @@ public class NotificationResponseDto {
     @NotNull(message = "Read status cannot be null")
     private Boolean isRead;
 
-    // scheduledAt може бути null, якщо нотифікація не запланована
+    // scheduledAt may be null if the notification is not scheduled
     private Instant scheduledAt;
 
-    // sentAt може бути null, якщо нотифікація ще не відправлена
+    // sentAt may be null if the notification has not been sent yet
     private Instant sentAt;
 
     @NotNull(message = "Creation timestamp cannot be null")
     private Instant createdAt;
 
-    // updatedAt може бути null, якщо нотифікацію ще не редагували
+    // updatedAt may be null if the notification has not been edited yet
     private Instant updatedAt;
 
 

@@ -69,6 +69,8 @@ const Api = (() => {
       get: (id) => get(`/users/${id}`),
       update: (id, b) => put(`/users/${id}`, b),
       remove: (id) => del(`/users/${id}`),
+      upcoming: (uid, days = 7, size = 20) =>
+        get(`/users/${uid}/upcoming?days=${days}&size=${size}`),
       notifications: (uid, page, size) => {
         const q = [];
         if (page !== undefined) q.push("page=" + page);
@@ -112,6 +114,7 @@ const Api = (() => {
       remove: (id) => del(`/tasks/${id}`),
       comments: (tid) => get(`/tasks/${tid}/comments`),
       addComment: (tid, b) => post(`/tasks/${tid}/comments`, b),
+      deleteComment: (tid, cid) => del(`/tasks/${tid}/comments/${cid}`),
       history: (tid) => get(`/tasks/${tid}/history`),
       timeEntries: (tid) => get(`/tasks/${tid}/time-entries`),
       addTimeEntry: (tid, b) => post(`/tasks/${tid}/time-entries`, b),
@@ -121,6 +124,7 @@ const Api = (() => {
       deleteAttachment: (tid, aid) => del(`/tasks/${tid}/attachments/${aid}`),
       reminders: (tid) => get(`/tasks/${tid}/reminders`),
       addReminder: (tid, b) => post(`/tasks/${tid}/reminders`, b),
+      deleteReminder: (tid, rid) => del(`/tasks/${tid}/reminders/${rid}`),
     },
     invites: {
       create: (b) => post("/invites", b),

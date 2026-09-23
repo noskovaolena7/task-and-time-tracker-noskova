@@ -15,8 +15,8 @@ public class AttachmentCreateRequestDto {
     @Size(max = 255, message = "File name must be <= 255 characters")
     private String fileName;
 
-    @NotBlank(message = "File URL is required") // ← додано
-    @Size(max = 2048, message = "File URL must be <= 2048 characters") // ← додано
+    @NotBlank(message = "File URL is required") // added
+    @Size(max = 2048, message = "File URL must be <= 2048 characters") // added
     @Pattern(
             regexp = "^(https?://).+$",
             message = "File URL must be a valid HTTP/HTTPS link")

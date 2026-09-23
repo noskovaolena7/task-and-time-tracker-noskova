@@ -95,4 +95,33 @@ class CommentControllerTest {
                 .andExpect(jsonPath("$.id").value(comment.getId().toString()))
                 .andExpect(jsonPath("$.text").value("New comment"));
     }
+
+    @Test
+    void deleteComment_returns204_onSuccess() throws Exception {
+        UUID taskId = UUID.randomUUID();
+        UUID commentId = UUID.randomUUID();
+        var comment = new com.olenanoskova.task_and_time_tracker.service.model.Comment();
+        comment.setId(commentId);
+        comment.setTaskId(taskId);
+
+        when(service.getCommentById(commentId)).thenReturn(comment);
+
+        mvc.perform(delete("/tasks/{taskId}/comments/{commentId}", taskId.toString(), commentId.toString()))
+                .andExpect(status().isNoContent());
+        org.mockito.Mockito.verify(service).deleteComment(commentId);
+    }
+
+    @Test
+    void deleteComment_returns404_whenTaskMismatch() throws Exception {
+        UUID taskId = UUID.randomUUID();
+        UUID commentId = UUID.randomUUID();
+        var comment = new com.olenanoskova.task_and_time_tracker.service.model.Comment();
+        comment.setId(commentId);
+        comment.setTaskId(UUID.randomUUID());
+
+        when(service.getCommentById(commentId)).thenReturn(comment);
+
+        mvc.perform(delete("/tasks/{taskId}/comments/{commentId}", taskId.toString(), commentId.toString()))
+                .andExpect(status().is4xxClientError());
+    }
 }

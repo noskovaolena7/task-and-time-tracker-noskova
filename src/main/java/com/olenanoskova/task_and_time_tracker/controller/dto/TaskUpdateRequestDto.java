@@ -20,10 +20,10 @@ public class TaskUpdateRequestDto {
     @Size(max = 50, message = "Priority must be <= 50 characters")
     private String priority;
 
-    // може бути null — задача може бути не призначена
+    // may be null — the task may be unassigned
     private UUID assignedTo;
 
-    // може бути null — дедлайн не обов’язковий
+    // may be null — due date is optional
     private Instant dueDate;
 
 }

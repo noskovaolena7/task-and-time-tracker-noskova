@@ -105,4 +105,12 @@ databaseChangeLog:
             path: 014-workspace-delete-unlinks.sql
             relativeToChangelogFile: true
 
+  - changeSet:
+      id: 015-creators-set-null
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 015-creators-set-null.sql
+            relativeToChangelogFile: true
+
 

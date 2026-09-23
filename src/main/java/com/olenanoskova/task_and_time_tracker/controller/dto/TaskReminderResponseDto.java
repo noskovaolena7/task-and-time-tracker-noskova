@@ -27,6 +27,6 @@ public class TaskReminderResponseDto {
     @NotNull(message = "Creation timestamp cannot be null")
     private Instant createdAt;
 
-    // може бути null, якщо нагадування ще не редагували
+    // may be null if the reminder has not been edited yet
     private Instant updatedAt;
 }

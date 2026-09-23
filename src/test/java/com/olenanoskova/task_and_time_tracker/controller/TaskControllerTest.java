@@ -81,7 +81,15 @@ class TaskControllerTest {
 
     @Test
     void getAllTasks_returns200_emptyList() throws Exception {
-        when(service.getTasks(null,null,null,null,null)).thenReturn(java.util.List.of());
+        when(service.getTasksForUser(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull()))
+                .thenReturn(java.util.List.of());
 
         mvc.perform(get("/tasks"))
                 .andExpect(status().isOk())

@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -42,5 +43,19 @@ public class CommentController {
         CommentResponseDto response = commentMapper.toDto(createdComment);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @DeleteMapping("/{commentId}")
+    @PreAuthorize("@securityService.canManageComment(#taskId, #commentId)")
+    public ResponseEntity<Void> deleteComment(
+            @PathVariable UUID taskId,
+            @PathVariable UUID commentId) {
+
+        Comment existing = commentService.getCommentById(commentId);
+        if (!taskId.equals(existing.getTaskId())) {
+            throw new com.olenanoskova.task_and_time_tracker.exception.CommentNotFoundException(commentId);
+        }
+        commentService.deleteComment(commentId);
+        return ResponseEntity.noContent().build();
     }
 }

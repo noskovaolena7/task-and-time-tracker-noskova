@@ -12,15 +12,23 @@
   <div id="auth-view" class="auth-wrap hidden">
     <div class="auth-card">
       <h1>Task &amp; Time Tracker</h1>
-      <p class="muted">Трекер задач і часу — personal та company воркспейси</p>
+      <p class="muted" data-i18n="app.sub"></p>
       <div class="tabs" id="auth-tabs">
-        <button data-tab="login" class="tab active">Вхід</button>
-        <button data-tab="personal" class="tab">Personal реєстрація</button>
-        <button data-tab="company" class="tab">Company реєстрація</button>
-        <button data-tab="invite" class="tab">Маю інвайт</button>
+        <button data-tab="login" class="tab active" data-i18n="auth.login"></button>
+        <button data-tab="personal" class="tab" data-i18n="auth.personal"></button>
+        <button data-tab="company" class="tab" data-i18n="auth.company"></button>
+        <button data-tab="invite" class="tab" data-i18n="auth.invite"></button>
       </div>
       <form id="auth-form"></form>
       <p class="hint" id="auth-hint"></p>
+      <div class="lang-row auth-lang">
+        <span class="muted" data-i18n="nav.lang"></span>
+        <select class="lang-sel" aria-label="Language">
+          <option value="uk">UA</option>
+          <option value="en">EN</option>
+          <option value="de">DE</option>
+        </select>
+      </div>
     </div>
   </div>
 
@@ -29,19 +37,28 @@
       <div class="brand">Task &amp; Time</div>
       <div class="me" id="me-box"></div>
       <nav id="nav">
-        <button data-route="dashboard">Кабінет</button>
-        <button data-route="projects">Проєкти</button>
-        <button data-route="tasks">Задачі</button>
-        <button data-route="companies">Компанії</button>
-        <button data-route="team">Команда</button>
-        <button data-route="notifications">Сповіщення <span id="notif-badge" class="badge hidden"></span></button>
-        <button data-route="workspaces">Воркспейси</button>
+        <button data-route="dashboard" data-i18n="nav.dashboard"></button>
+        <button data-route="projects" data-i18n="nav.projects"></button>
+        <button data-route="tasks" data-i18n="nav.tasks"></button>
+        <button data-route="companies" data-i18n="nav.companies"></button>
+        <button data-route="team" data-i18n="nav.team"></button>
+        <button data-route="notifications"><span data-i18n="nav.notifications"></span> <span id="notif-badge" class="badge hidden"></span></button>
+        <button data-route="workspaces" data-i18n="nav.workspaces"></button>
       </nav>
-      <button id="logout-btn" class="ghost">Вийти</button>
+      <div class="lang-row">
+        <span class="muted" data-i18n="nav.lang"></span>
+        <select id="lang-sel" class="lang-sel">
+          <option value="uk">UA</option>
+          <option value="en">EN</option>
+          <option value="de">DE</option>
+        </select>
+      </div>
+      <button id="logout-btn" class="ghost" data-i18n="nav.logout"></button>
     </aside>
     <main id="main"></main>
   </div>
 
+  <script src="js/i18n.js"></script>
   <script src="js/api.js"></script>
   <script src="js/app.js"></script>
 </body>

@@ -46,4 +46,18 @@ public class TaskReminderController {
 
         return ResponseEntity.status(HttpStatus.CREATED).body(taskReminderMapper.toDto(created));
     }
+
+    @DeleteMapping("/{reminderId}")
+    @PreAuthorize("@securityService.canAccessTask(#taskId)")
+    public ResponseEntity<Void> deleteReminder(
+            @PathVariable UUID taskId,
+            @PathVariable UUID reminderId) {
+
+        TaskReminder existing = taskReminderService.getReminderById(reminderId);
+        if (!taskId.equals(existing.getTaskId())) {
+            throw new com.olenanoskova.task_and_time_tracker.exception.TaskReminderNotFoundException(reminderId);
+        }
+        taskReminderService.deleteReminder(reminderId);
+        return ResponseEntity.noContent().build();
+    }
 }

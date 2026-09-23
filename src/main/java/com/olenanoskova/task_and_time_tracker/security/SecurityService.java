@@ -23,6 +23,7 @@ public class SecurityService {
     private final ProjectRepository projectRepository;
     private final CompanyRepository companyRepository;
     private final WorkspaceRepository workspaceRepository;
+    private final CommentRepository commentRepository;
     private final TaskRepository taskRepository;
     private final AttachmentRepository attachmentRepository;
     private final TokenService tokenService;
@@ -222,14 +223,16 @@ public class SecurityService {
         return shared.stream().anyMatch(companyId -> isOwnerOrAdmin(companyId, requesterId));
     }
 
+    /**
+     * Account deletion purges personal data, so only the account owner may
+     * do it. Removing someone else from a company is done via company roles,
+     * which keeps their projects intact.
+     */
     public boolean canDeleteUser(UUID targetUserId) {
         UUID requesterId = getCurrentUserId();
         if (requesterId == null) return false;
 
-        List<UUID> shared = sharedCompanyIds(requesterId, targetUserId);
-        if (shared.isEmpty()) return false;
-
-        return shared.stream().anyMatch(companyId -> isOwnerOrAdmin(companyId, requesterId));
+        return requesterId.equals(targetUserId);
     }
 
     private List<UUID> sharedCompanyIds(UUID userA, UUID userB) {
@@ -238,6 +241,23 @@ public class SecurityService {
         return userCompanyRoleRepository.findCompanyIdsByUserId(userA).stream()
                 .filter(companiesB::contains)
                 .toList();
+    }
+
+    /**
+     * Authorizes comment deletion: the comment author, or anyone who may
+     * delete the task itself.
+     */
+    public boolean canManageComment(UUID taskId, UUID commentId) {
+        UUID requesterId = getCurrentUserId();
+        if (requesterId == null || taskId == null || commentId == null) return false;
+
+        boolean isAuthor = commentRepository.findById(commentId)
+                .map(c -> requesterId.equals(c.getUserId())
+                        && taskId.equals(c.getTaskId()))
+                .orElse(false);
+        if (isAuthor) return true;
+
+        return canDeleteTask(taskId);
     }
 
     // -------------------------------

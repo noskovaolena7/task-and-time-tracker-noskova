@@ -29,6 +29,18 @@ class UserServiceTest {
     @Mock
     UserMapper userMapper;
 
+    @Mock
+    com.olenanoskova.task_and_time_tracker.repository.CompanyRepository companyRepository;
+
+    @Mock
+    com.olenanoskova.task_and_time_tracker.repository.UserCompanyRoleRepository userCompanyRoleRepository;
+
+    @Mock
+    com.olenanoskova.task_and_time_tracker.repository.ProjectRepository projectRepository;
+
+    @Mock
+    com.olenanoskova.task_and_time_tracker.repository.WorkspaceRepository workspaceRepository;
+
     @InjectMocks
     UserServiceImpl userService;
 
@@ -69,5 +81,49 @@ class UserServiceTest {
         UUID id = UUID.randomUUID();
         when(userRepository.findById(id)).thenReturn(Optional.empty());
         assertThrows(UserNotFoundException.class, () -> userService.getUserById(id));
+    }
+
+    @Test
+    void delete_notFound_throws() {
+        UUID id = UUID.randomUUID();
+        when(userRepository.existsById(id)).thenReturn(false);
+        assertThrows(UserNotFoundException.class, () -> userService.delete(id));
+    }
+
+    @Test
+    void delete_ownerWithoutTransfer_throws() {
+        UUID id = UUID.randomUUID();
+        var company = new com.olenanoskova.task_and_time_tracker.repository.entity.CompanyEntity();
+        company.setId(UUID.randomUUID());
+        company.setOwnerId(id);
+        when(userRepository.existsById(id)).thenReturn(true);
+        when(companyRepository.findByOwnerId(id)).thenReturn(java.util.List.of(company));
+
+        assertThrows(com.olenanoskova.task_and_time_tracker.exception.BadRequestException.class,
+                () -> userService.delete(id));
+        verify(userRepository, never()).deleteById(id);
+    }
+
+    @Test
+    void delete_personalUser_purgesPersonalData() {
+        UUID id = UUID.randomUUID();
+        var project = new com.olenanoskova.task_and_time_tracker.repository.entity.ProjectEntity();
+        project.setId(UUID.randomUUID());
+        var ws = new com.olenanoskova.task_and_time_tracker.repository.entity.WorkspaceEntity();
+        ws.setId(UUID.randomUUID());
+        ws.setOwnerId(id);
+        ws.setCompanyId(null);
+        when(userRepository.existsById(id)).thenReturn(true);
+        when(companyRepository.findByOwnerId(id)).thenReturn(java.util.List.of());
+        when(userCompanyRoleRepository.findCompanyIdsByUserId(id)).thenReturn(java.util.List.of());
+        when(projectRepository.findByCompanyIdIsNullAndCreatedBy(id))
+                .thenReturn(java.util.List.of(project));
+        when(workspaceRepository.findByOwnerId(id)).thenReturn(java.util.List.of(ws));
+
+        userService.delete(id);
+
+        verify(projectRepository).deleteById(project.getId());
+        verify(workspaceRepository).deleteById(ws.getId());
+        verify(userRepository).deleteById(id);
     }
 }

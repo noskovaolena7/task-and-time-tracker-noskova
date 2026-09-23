@@ -28,6 +28,6 @@ public class UserCompanyRoleResponseDto {
     @NotNull(message = "Creation timestamp cannot be null")
     private Instant createdAt;
 
-    // може бути null, якщо роль ще не редагували
+    // may be null if the role has not been edited yet
     private Instant updatedAt;
 }

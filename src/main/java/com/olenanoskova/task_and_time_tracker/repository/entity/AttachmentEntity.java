@@ -20,7 +20,7 @@ public class AttachmentEntity {
     @Column(nullable = false)
     private UUID projectId;
 
-    private UUID taskId; // може бути null
+    private UUID taskId; // may be null
 
     @Column(nullable = false)
     private String fileName;

@@ -1,7 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.service;
 
-import com.olenanoskova.task_and_time_tracker.exception.InvalidTaskStatusException;
-import com.olenanoskova.task_and_time_tracker.exception.ProjectNotFoundException;
+import com.olenanoskova.task_and_time_tracker.exception.InvalidTaskStatusException;import com.olenanoskova.task_and_time_tracker.exception.ProjectNotFoundException;
 import com.olenanoskova.task_and_time_tracker.exception.TaskNotFoundException;
 import com.olenanoskova.task_and_time_tracker.exception.UserNotFoundException;
 import com.olenanoskova.task_and_time_tracker.mapper.TaskMapper;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -92,6 +90,52 @@ public class TaskServiceImpl implements TaskService {
             entities = taskRepository.findAll(PageRequest.of(page, size)).getContent();
         } else {
             entities = taskRepository.findAll();
+        }
+
+        return entities.stream()
+                .map(taskMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Task> getTasksForUser(UUID userId, List<UUID> companyIds,
+            Integer page, Integer size, String status, UUID projectId, UUID assignedTo) {
+
+        log.info("Fetching visible tasks for user {}, projectId={}", userId, projectId);
+
+        if (projectId != null) {
+            return getTasks(page, size, status, projectId, assignedTo);
+        }
+
+        TaskStatusEntity statusEnum = null;
+        if (status != null) {
+            try {
+                statusEnum = TaskStatusEntity.valueOf(status);
+            } catch (IllegalArgumentException e) {
+                throw new InvalidTaskStatusException(status);
+            }
+        }
+
+        java.util.Set<UUID> visibleProjects = new java.util.HashSet<>();
+        projectRepository.findByCompanyIdIsNullAndCreatedBy(userId)
+                .forEach(p -> visibleProjects.add(p.getId()));
+        if (companyIds != null) {
+            for (UUID companyId : companyIds) {
+                projectRepository.findByCompanyId(companyId)
+                        .forEach(p -> visibleProjects.add(p.getId()));
+            }
+        }
+
+        List<TaskEntity> entities = taskRepository.findWithFilters(statusEnum, null, assignedTo).stream()
+                .filter(t -> visibleProjects.contains(t.getProjectId())
+                        || userId.equals(t.getAssignedTo())
+                        || userId.equals(t.getCreatedBy()))
+                .toList();
+
+        if (page != null && size != null) {
+            int from = Math.min(page * size, entities.size());
+            int to = Math.min(from + size, entities.size());
+            entities = entities.subList(from, to);
         }
 
         return entities.stream()

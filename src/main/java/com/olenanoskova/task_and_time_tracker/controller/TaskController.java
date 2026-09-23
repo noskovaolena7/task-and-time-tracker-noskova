@@ -2,6 +2,7 @@ package com.olenanoskova.task_and_time_tracker.controller;
 
 import com.olenanoskova.task_and_time_tracker.controller.dto.*;
 import com.olenanoskova.task_and_time_tracker.mapper.TaskMapper;
+import com.olenanoskova.task_and_time_tracker.security.SecurityService;
 import com.olenanoskova.task_and_time_tracker.service.TaskService;
 import com.olenanoskova.task_and_time_tracker.service.model.Task;
 import com.olenanoskova.task_and_time_tracker.controller.dto.TaskCreateRequestDto;
@@ -23,6 +24,7 @@ public class TaskController {
 
     private final TaskService taskService;
     private final TaskMapper taskMapper;
+    private final SecurityService securityService;
 
 
     @PostMapping
@@ -44,7 +46,10 @@ public class TaskController {
             @RequestParam(name = "project_id", required = false) UUID projectId,
             @RequestParam(name = "assigned_to", required = false) UUID assignedTo) {
 
-        List<Task> tasks = taskService.getTasks(page, size, status, projectId, assignedTo);
+        List<Task> tasks = taskService.getTasksForUser(
+                securityService.getCurrentUserId(),
+                securityService.getCurrentUserCompanyIds(),
+                page, size, status, projectId, assignedTo);
         List<TaskResponseDto> responseList = tasks.stream()
                 .map(taskMapper::toDto)
                 .toList();

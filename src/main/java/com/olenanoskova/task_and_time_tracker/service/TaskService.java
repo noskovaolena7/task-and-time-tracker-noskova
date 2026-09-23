@@ -12,6 +12,15 @@ public interface TaskService {
 
     List<Task> getTasks(Integer page, Integer size, String status, UUID projectId, UUID assignedTo);
 
+    /**
+     * Tasks visible to the user: tasks of own personal projects, tasks of all
+     * own companies' projects, plus tasks assigned to / created by the user.
+     * When projectId is given, plain project filtering applies (the caller
+     * authorizes project access).
+     */
+    List<Task> getTasksForUser(UUID userId, List<UUID> companyIds,
+            Integer page, Integer size, String status, UUID projectId, UUID assignedTo);
+
     Task getTaskById(UUID id);
 
     Task updateTask(UUID id, Task task);

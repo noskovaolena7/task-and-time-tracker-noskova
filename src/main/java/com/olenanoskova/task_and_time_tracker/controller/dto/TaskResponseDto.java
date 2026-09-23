@@ -32,19 +32,19 @@ public class TaskResponseDto {
     @NotNull(message = "Creator ID cannot be null")
     private UUID createdBy;
 
-    // може бути null — задача може бути не призначена
+    // may be null — the task may be unassigned
     private UUID assignedTo;
 
-    // може бути null — дедлайн не обов’язковий
+    // may be null — due date is optional
     private Instant dueDate;
 
     @NotNull(message = "Creation timestamp cannot be null")
     private Instant createdAt;
 
-    // може бути null, якщо задачу ще не редагували
+    // may be null if the task has not been edited yet
     private Instant updatedAt;
 
-    // може бути null, якщо задача не завершена
+    // may be null if the task is not completed
     private Instant completedAt;
 
 }

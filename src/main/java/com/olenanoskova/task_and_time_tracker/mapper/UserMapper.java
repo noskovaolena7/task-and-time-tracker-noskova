@@ -38,7 +38,7 @@ public class UserMapper {
         return entity;
     }
 
-    // Entity → Domain  ← ЭТОГО У ТЕБЯ НЕ ХВАТАЛО
+    // Entity → Domain
     public User toDomain(UserEntity entity) {
         User user = new User();
         user.setId(entity.getId());

@@ -27,7 +27,7 @@ public class CommentResponseDto {
     @NotNull(message = "Creation timestamp cannot be null")
     private Instant createdAt;
 
-    // updatedAt може бути null, якщо коментар ще не редагували
+    // updatedAt may be null if the comment has not been edited yet
     private Instant updatedAt;
 
 }

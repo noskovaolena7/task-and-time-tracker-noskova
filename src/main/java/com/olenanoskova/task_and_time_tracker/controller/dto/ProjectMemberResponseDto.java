@@ -28,7 +28,7 @@ public class ProjectMemberResponseDto {
     @NotNull(message = "Creation timestamp cannot be null")
     private Instant createdAt;
 
-    // може бути null, якщо учасника ще не редагували
+    // may be null if the member has not been edited yet
     private Instant updatedAt;
 
 
