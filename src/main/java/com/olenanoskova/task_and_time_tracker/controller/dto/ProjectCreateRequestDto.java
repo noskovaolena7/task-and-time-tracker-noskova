@@ -8,7 +8,7 @@ import java.util.UUID;
 @Data
 public class ProjectCreateRequestDto {
 
-    @NotNull(message = "Company ID is required")
+    // Optional: null means a personal project (no company).
     private UUID companyId;
 
     @NotBlank(message = "Project name cannot be blank")

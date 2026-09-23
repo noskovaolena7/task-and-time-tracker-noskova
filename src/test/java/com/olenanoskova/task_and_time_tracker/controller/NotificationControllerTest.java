@@ -40,8 +40,52 @@ class NotificationControllerTest {
     @Test
     void getAllNotifications_returns4xx_whenServiceThrows() throws Exception {
         UUID userId = UUID.randomUUID();
-        when(service.getAllNotifications(userId)).thenThrow(new com.olenanoskova.task_and_time_tracker.exception.NotificationNotFoundException(userId));
+        when(service.getNotificationsForUser(userId, null, null)).thenThrow(new com.olenanoskova.task_and_time_tracker.exception.NotificationNotFoundException(userId));
 
-        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/users/{id}/notifications", userId.toString())).andExpect(status().is4xxClientError());
+        mvc.perform(get("/users/{id}/notifications", userId.toString())).andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void getAllNotifications_returns200_withList() throws Exception {
+        UUID userId = UUID.randomUUID();
+        var notif = new com.olenanoskova.task_and_time_tracker.service.model.Notification();
+        notif.setId(UUID.randomUUID());
+        notif.setMessage("You have a task assigned");
+
+        var dto = new com.olenanoskova.task_and_time_tracker.controller.dto.NotificationResponseDto();
+        dto.setId(notif.getId());
+        dto.setMessage("You have a task assigned");
+
+        when(service.getNotificationsForUser(userId, null, null)).thenReturn(java.util.List.of(notif));
+        when(mapper.toDto(notif)).thenReturn(dto);
+
+        mvc.perform(get("/users/{id}/notifications", userId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].message").value("You have a task assigned"));
+    }
+
+    @Test
+    void markNotificationAsRead_returns200() throws Exception {
+        UUID userId = UUID.randomUUID();
+        UUID notificationId = UUID.randomUUID();
+
+        var notif = new com.olenanoskova.task_and_time_tracker.service.model.Notification();
+        notif.setId(notificationId);
+        notif.setUserId(userId);
+        notif.setRead(true);
+
+        var dto = new com.olenanoskova.task_and_time_tracker.controller.dto.NotificationResponseDto();
+        dto.setId(notificationId);
+        dto.setIsRead(true);
+
+        when(service.getNotificationById(notificationId)).thenReturn(notif);
+        when(service.markNotificationAsRead(notificationId)).thenReturn(notif);
+        when(mapper.toDto(notif)).thenReturn(dto);
+
+        mvc.perform(put("/users/{userId}/notifications/{notificationId}/read", userId.toString(), notificationId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(notificationId.toString()))
+                .andExpect(jsonPath("$.isRead").value(true));
     }
 }

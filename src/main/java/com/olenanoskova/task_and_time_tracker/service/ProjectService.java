@@ -11,6 +11,11 @@ public interface ProjectService {
 
     List<Project> getProjects(Integer page, Integer size, UUID companyId);
 
+    /**
+     * Personal projects of a user: company_id IS NULL and created_by = userId.
+     */
+    List<Project> getPersonalProjects(UUID userId, Integer page, Integer size);
+
     Project getProjectById(UUID id);
 
     Project updateProject(UUID id, Project project);

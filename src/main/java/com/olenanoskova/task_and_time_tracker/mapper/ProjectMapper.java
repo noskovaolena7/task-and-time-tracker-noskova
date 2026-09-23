@@ -19,6 +19,7 @@ public class ProjectMapper {
         project.setCompanyId(dto.getCompanyId());
         project.setName(dto.getName());
         project.setDescription(dto.getDescription());
+        project.setCreatedBy(dto.getCreatedBy());
         project.setCreatedAt(Instant.now());
         project.setUpdatedAt(Instant.now());
         return project;
@@ -42,6 +43,7 @@ public class ProjectMapper {
         entity.setName(project.getName());
         entity.setDescription(project.getDescription());
         entity.setCompanyId(project.getCompanyId());
+        entity.setCreatedBy(project.getCreatedBy());
         entity.setCreatedAt(project.getCreatedAt());
         entity.setUpdatedAt(project.getUpdatedAt());
         return entity;
@@ -54,6 +56,7 @@ public class ProjectMapper {
         project.setCompanyId(entity.getCompanyId());
         project.setName(entity.getName());
         project.setDescription(entity.getDescription());
+        project.setCreatedBy(entity.getCreatedBy());
         project.setCreatedAt(entity.getCreatedAt());
         project.setUpdatedAt(entity.getUpdatedAt());
         return project;
@@ -66,6 +69,7 @@ public class ProjectMapper {
         dto.setCompanyId(project.getCompanyId());
         dto.setName(project.getName());
         dto.setDescription(project.getDescription());
+        dto.setCreatedBy(project.getCreatedBy());
         dto.setCreatedAt(project.getCreatedAt());
         dto.setUpdatedAt(project.getUpdatedAt());
         return dto;

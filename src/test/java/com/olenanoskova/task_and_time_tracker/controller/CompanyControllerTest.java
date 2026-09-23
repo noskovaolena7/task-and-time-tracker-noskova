@@ -33,6 +33,9 @@ class CompanyControllerTest {
     @Mock
     SecurityService securityService;
 
+    @Mock
+    com.olenanoskova.task_and_time_tracker.service.UserCompanyRoleService userCompanyRoleService;
+
     @InjectMocks
     CompanyController controller;
 

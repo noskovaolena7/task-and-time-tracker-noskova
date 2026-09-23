@@ -2,6 +2,7 @@ package com.olenanoskova.task_and_time_tracker.controller;
 
 import com.olenanoskova.task_and_time_tracker.controller.dto.UserResponseDto;
 import com.olenanoskova.task_and_time_tracker.controller.dto.UserUpdateRequestDto;
+import com.olenanoskova.task_and_time_tracker.exception.BadRequestException;
 import com.olenanoskova.task_and_time_tracker.mapper.UserMapper;
 import com.olenanoskova.task_and_time_tracker.security.SecurityService;
 import com.olenanoskova.task_and_time_tracker.service.UserService;
@@ -34,11 +35,19 @@ public class UserController {
     public ResponseEntity<List<UserResponseDto>> getAllUsers() {
 
 
-        UUID companyId = securityService.getCurrentUserCompanyId();
-        if (companyId == null) {
-            throw new RuntimeException("Company not found");
+        List<UUID> companyIds = securityService.getCurrentUserCompanyIds();
+        if (companyIds.isEmpty()) {
+            throw new BadRequestException("Current user has no company");
         }
-        List<User> users = userService.getUsers(companyId);
+        List<User> users = new java.util.ArrayList<>();
+        java.util.Set<UUID> seen = new java.util.HashSet<>();
+        for (UUID companyId : companyIds) {
+            for (User user : userService.getUsers(companyId)) {
+                if (user.getId() != null && seen.add(user.getId())) {
+                    users.add(user);
+                }
+            }
+        }
         List<UserResponseDto> responseList = users.stream()
                 .map(userMapper::toDto)
                 .toList();

@@ -17,7 +17,10 @@ public class NotificationMapper {
         notification.setUserId(entity.getUserId());
         notification.setProjectId(entity.getProjectId());
         notification.setTaskId(entity.getTaskId());
-        notification.setStatus(NotificationStatus.valueOf(entity.getStatus().name()));
+        // status column may be NULL for rows created before changeset 010
+        notification.setStatus(entity.getStatus() == null
+                ? null
+                : NotificationStatus.valueOf(entity.getStatus().name()));
         notification.setType(entity.getType());
         notification.setMessage(entity.getMessage());
         notification.setRead(entity.getRead() != null && entity.getRead());
@@ -35,7 +38,9 @@ public class NotificationMapper {
         entity.setUserId(notification.getUserId());
         entity.setProjectId(notification.getProjectId());
         entity.setTaskId(notification.getTaskId());
-        entity.setStatus(NotificationStatusEntity.valueOf(notification.getStatus().name()));
+        entity.setStatus(notification.getStatus() == null
+                ? null
+                : NotificationStatusEntity.valueOf(notification.getStatus().name()));
         entity.setType(notification.getType());
         entity.setMessage(notification.getMessage());
         entity.setRead(notification.isRead());
@@ -53,6 +58,7 @@ public class NotificationMapper {
         dto.setUserId(notification.getUserId());
         dto.setProjectId(notification.getProjectId());
         dto.setTaskId(notification.getTaskId());
+        dto.setStatus(notification.getStatus());
         dto.setType(notification.getType());
         dto.setMessage(notification.getMessage());
         dto.setIsRead(notification.isRead());

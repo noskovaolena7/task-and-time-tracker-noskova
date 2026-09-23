@@ -1,5 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.controller.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -21,6 +22,7 @@ public class ProjectMemberResponseDto {
 
     @NotNull(message = "Member role cannot be null")
     @Valid
+    @JsonProperty("member_role")
     private MemberRoleDto memberRoleDto;
 
     @NotNull(message = "Creation timestamp cannot be null")

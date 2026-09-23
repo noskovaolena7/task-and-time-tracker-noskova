@@ -34,6 +34,7 @@ public class AttachmentMapper {
         entity.setFileUrl(attachment.getFileUrl());
         entity.setUploadedBy(attachment.getUploadedBy());
         entity.setUploadedAt(attachment.getUploadedAt());
+        entity.setCreatedAt(attachment.getCreatedAt());
         entity.setUpdatedAt(attachment.getUpdatedAt());
         return entity;
     }
@@ -48,6 +49,7 @@ public class AttachmentMapper {
         attachment.setFileUrl(entity.getFileUrl());
         attachment.setUploadedBy(entity.getUploadedBy());
         attachment.setUploadedAt(entity.getUploadedAt());
+        attachment.setCreatedAt(entity.getCreatedAt());
         attachment.setUpdatedAt(entity.getUpdatedAt());
         return attachment;
     }

@@ -6,6 +6,7 @@ import com.olenanoskova.task_and_time_tracker.exception.UserCompanyRoleNotFoundE
 import com.olenanoskova.task_and_time_tracker.exception.UserNotFoundException;
 import com.olenanoskova.task_and_time_tracker.mapper.UserCompanyRoleMapper;
 import com.olenanoskova.task_and_time_tracker.repository.CompanyRepository;
+import com.olenanoskova.task_and_time_tracker.repository.entity.MemberRoleEntity;
 import com.olenanoskova.task_and_time_tracker.repository.UserCompanyRoleRepository;
 import com.olenanoskova.task_and_time_tracker.repository.UserRepository;
 import com.olenanoskova.task_and_time_tracker.repository.entity.UserCompanyRoleEntity;
@@ -116,12 +117,42 @@ public class UserCompanyRoleServiceImpl implements UserCompanyRoleService {
 
         log.info("Attempting to delete UserCompanyRole with id {}", id);
 
-        if (!roleRepository.existsById(id)) {
-            throw new UserCompanyRoleNotFoundException(id);
-        }
+        UserCompanyRoleEntity entity = roleRepository.findById(id)
+                .orElseThrow(() -> new UserCompanyRoleNotFoundException(id));
 
         roleRepository.deleteById(id);
 
+        transferRecordedOwnershipIfNeeded(entity);
+
         log.info("Successfully deleted UserCompanyRole with id {}", id);
+    }
+
+    /**
+     * Keeps companies.owner_id truthful when an OWNER row disappears: if the
+     * leaving user was the recorded owner, ownership passes to another
+     * remaining OWNER (or to null when none is left). All work processes
+     * (projects, members, roles) are untouched, so nothing is lost on
+     * ownership change.
+     */
+    private void transferRecordedOwnershipIfNeeded(UserCompanyRoleEntity deleted) {
+        if (deleted.getRole() != MemberRoleEntity.OWNER) {
+            return;
+        }
+        UUID companyId = deleted.getCompanyId();
+        companyRepository.findById(companyId).ifPresent(company -> {
+            if (!deleted.getUserId().equals(company.getOwnerId())) {
+                return;
+            }
+            UUID successor = roleRepository.findByCompanyId(companyId).stream()
+                    .filter(r -> r.getRole() == MemberRoleEntity.OWNER
+                            && !r.getUserId().equals(deleted.getUserId()))
+                    .map(UserCompanyRoleEntity::getUserId)
+                    .findFirst()
+                    .orElse(null);
+            company.setOwnerId(successor);
+            company.setUpdatedAt(Instant.now());
+            companyRepository.save(company);
+            log.info("Transferred recorded ownership of company {} to {}", companyId, successor);
+        });
     }
 }

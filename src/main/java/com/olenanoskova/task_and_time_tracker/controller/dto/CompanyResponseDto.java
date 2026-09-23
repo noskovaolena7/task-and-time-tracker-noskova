@@ -23,6 +23,10 @@ public class CompanyResponseDto {
     @Size(max = 500, message = "Description must be <= 500 characters")
     private String description;
 
+    private UUID ownerId;
+
+    private UUID workspaceId;
+
     @NotNull(message = "Creation timestamp cannot be null")
     private Instant createdAt;
 

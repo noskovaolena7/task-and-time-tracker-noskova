@@ -14,6 +14,8 @@ public class Company {
     private UUID id;
     private String name;
     private String description;
+    private UUID ownerId;
+    private UUID workspaceId;
     private Instant createdAt;
     private Instant updatedAt;
 }

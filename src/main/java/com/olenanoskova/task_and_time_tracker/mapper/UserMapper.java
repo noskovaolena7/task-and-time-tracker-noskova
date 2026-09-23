@@ -63,8 +63,24 @@ public class UserMapper {
         dto.setLastName(user.getLastName());
         dto.setEmail(user.getEmail());
         dto.setPhoneNumber(user.getPhoneNumber());
-        dto.setMemberRole(MemberRoleDto.valueOf(user.getRole().name()));
+        dto.setMemberRole(mapToMemberRole(user.getRole()));
         return dto;
+    }
+
+    /**
+     * Maps the 6-value user {@link Role} onto the 4-value {@link MemberRoleDto}:
+     * PERSONAL_USER/COMPANY_USER have no project-level equivalent and map to USER.
+     */
+    static MemberRoleDto mapToMemberRole(Role role) {
+        if (role == null) {
+            return null;
+        }
+        return switch (role) {
+            case USER, PERSONAL_USER, COMPANY_USER -> MemberRoleDto.USER;
+            case MANAGER -> MemberRoleDto.MANAGER;
+            case ADMIN -> MemberRoleDto.ADMIN;
+            case OWNER -> MemberRoleDto.OWNER;
+        };
     }
 
     public User toDomain(RegisterUserRequestDto dto) {

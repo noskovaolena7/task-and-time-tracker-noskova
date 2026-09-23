@@ -63,6 +63,7 @@ public class AuthServiceImpl implements AuthService {
         Company company = new Company();
         company.setName(request.getCompanyName());
         company.setDescription(request.getCompanyDescription());
+        company.setOwnerId(createdUser.getId());
 
         Company createdCompany = companyService.createCompany(company);
 

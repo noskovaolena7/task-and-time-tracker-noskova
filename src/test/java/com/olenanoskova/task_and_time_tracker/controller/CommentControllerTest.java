@@ -12,6 +12,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -37,11 +38,61 @@ class CommentControllerTest {
                 .build();
     }
 
+    private final com.fasterxml.jackson.databind.ObjectMapper om = new com.fasterxml.jackson.databind.ObjectMapper();
+
     @Test
     void getAll_returns4xx_whenServiceThrows() throws Exception {
         UUID taskId = UUID.randomUUID();
         when(service.getComments(taskId)).thenThrow(new com.olenanoskova.task_and_time_tracker.exception.TaskNotFoundException(taskId));
 
-        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/tasks/{id}/comments", taskId.toString())).andExpect(status().is4xxClientError());
+        mvc.perform(get("/tasks/{id}/comments", taskId.toString())).andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    void getAll_returns200_withComments() throws Exception {
+        UUID taskId = UUID.randomUUID();
+        var comment = new com.olenanoskova.task_and_time_tracker.service.model.Comment();
+        comment.setId(UUID.randomUUID());
+        comment.setTaskId(taskId);
+        comment.setText("Great progress");
+
+        var dto = new com.olenanoskova.task_and_time_tracker.controller.dto.CommentResponseDto();
+        dto.setId(comment.getId());
+        dto.setText("Great progress");
+
+        when(service.getComments(taskId)).thenReturn(java.util.List.of(comment));
+        when(mapper.toDto(comment)).thenReturn(dto);
+
+        mvc.perform(get("/tasks/{id}/comments", taskId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].text").value("Great progress"));
+    }
+
+    @Test
+    void createComment_returns201_onSuccess() throws Exception {
+        UUID taskId = UUID.randomUUID();
+        var req = new com.olenanoskova.task_and_time_tracker.controller.dto.CommentCreateRequestDto();
+        req.setUserId(UUID.randomUUID());
+        req.setText("New comment");
+
+        var comment = new com.olenanoskova.task_and_time_tracker.service.model.Comment();
+        comment.setId(UUID.randomUUID());
+        comment.setText("New comment");
+
+        var dto = new com.olenanoskova.task_and_time_tracker.controller.dto.CommentResponseDto();
+        dto.setId(comment.getId());
+        dto.setText("New comment");
+
+        when(mapper.toDomain(any(com.olenanoskova.task_and_time_tracker.controller.dto.CommentCreateRequestDto.class))).thenReturn(comment);
+        when(service.createComment(eq(taskId), any(com.olenanoskova.task_and_time_tracker.service.model.Comment.class))).thenReturn(comment);
+        when(mapper.toDto(comment)).thenReturn(dto);
+
+        mvc.perform(post("/tasks/{id}/comments", taskId.toString())
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(req)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(comment.getId().toString()))
+                .andExpect(jsonPath("$.text").value("New comment"));
     }
 }

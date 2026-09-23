@@ -36,13 +36,13 @@ public class TaskController {
     }
 
     @GetMapping
-    @PreAuthorize("@securityService.canAccessTask(#projectId)")
+    @PreAuthorize("@securityService.canListTasks(#projectId)")
     public ResponseEntity<List<TaskResponseDto>> getAllTasks(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) UUID projectId,
-            @RequestParam(required = false) UUID assignedTo) {
+            @RequestParam(name = "project_id", required = false) UUID projectId,
+            @RequestParam(name = "assigned_to", required = false) UUID assignedTo) {
 
         List<Task> tasks = taskService.getTasks(page, size, status, projectId, assignedTo);
         List<TaskResponseDto> responseList = tasks.stream()

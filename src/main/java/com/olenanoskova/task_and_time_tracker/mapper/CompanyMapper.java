@@ -16,6 +16,7 @@ public class CompanyMapper {
     // DTO → Domain (Create)
     public Company toDomain(@Valid CompanyCreateRequestDto dto) {
         Company company = new Company();
+        company.setOwnerId(dto.getOwnerId());
         company.setName(dto.getName());
         company.setDescription(dto.getDescription());
         company.setCreatedAt(Instant.now());
@@ -36,6 +37,8 @@ public class CompanyMapper {
         entity.setId(company.getId());
         entity.setName(company.getName());
         entity.setDescription(company.getDescription());
+        entity.setOwnerId(company.getOwnerId());
+        entity.setWorkspaceId(company.getWorkspaceId());
         entity.setCreatedAt(company.getCreatedAt());
         entity.setUpdatedAt(company.getUpdatedAt());
         return entity;
@@ -47,6 +50,8 @@ public class CompanyMapper {
         company.setId(entity.getId());
         company.setName(entity.getName());
         company.setDescription(entity.getDescription());
+        company.setOwnerId(entity.getOwnerId());
+        company.setWorkspaceId(entity.getWorkspaceId());
         company.setCreatedAt(entity.getCreatedAt());
         company.setUpdatedAt(entity.getUpdatedAt());
         return company;
@@ -58,6 +63,8 @@ public class CompanyMapper {
         dto.setId(company.getId());
         dto.setName(company.getName());
         dto.setDescription(company.getDescription());
+        dto.setOwnerId(company.getOwnerId());
+        dto.setWorkspaceId(company.getWorkspaceId());
         dto.setCreatedAt(company.getCreatedAt());
         dto.setUpdatedAt(company.getUpdatedAt());
         return dto;

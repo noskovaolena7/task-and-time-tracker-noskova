@@ -18,6 +18,9 @@ public class ProjectDeadlineResponseDto {
     @NotNull(message = "Project ID cannot be null")
     private UUID projectId;
 
+    @Size(min = 2, max = 200, message = "Title must be between 2 and 200 characters")
+    private String title;
+
     @NotNull(message = "Deadline timestamp cannot be null")
     private Instant deadline;
 

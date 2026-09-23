@@ -1,5 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.controller.dto;
 
+import com.olenanoskova.task_and_time_tracker.service.model.NotificationStatus;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -19,6 +20,9 @@ public class NotificationResponseDto {
 
     // taskId може бути null, якщо нотифікація не прив'язана до задачі
     private UUID taskId;
+
+    // status може бути null для нотифікацій, створених до міграції 010
+    private NotificationStatus status;
 
     @NotBlank(message = "Notification type cannot be blank")
     @Size(max = 100, message = "Notification type must be <= 100 characters")

@@ -25,7 +25,7 @@ public class CompanyRoleController {
     private final UserCompanyRoleMapper roleMapper;
 
     @GetMapping
-    @PreAuthorize("@securityService.canAccessUser(#companyId)")
+    @PreAuthorize("@securityService.canAccessCompany(#companyId)")
     public ResponseEntity<List<UserCompanyRoleResponseDto>> getRoles(@PathVariable UUID companyId) {
         List<UserCompanyRole> roles = roleService.getRoles(companyId);
         List<UserCompanyRoleResponseDto> responseList = roles.stream()
@@ -36,7 +36,7 @@ public class CompanyRoleController {
     }
 
     @PostMapping
-    @PreAuthorize("@securityService.hasCompanyRole(#companyId, securityService.getCurrentUserId(), 'OWNER')")
+    @PreAuthorize("@securityService.canAssignRole(#companyId, #request.role.name())")
     public ResponseEntity<UserCompanyRoleResponseDto> createRole(
             @PathVariable UUID companyId,
             @Valid @RequestBody UserCompanyRoleCreateRequestDto request) {
@@ -46,6 +46,34 @@ public class CompanyRoleController {
         UserCompanyRoleResponseDto response = roleMapper.toDto(createdRole);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PutMapping("/{roleId}")
+    @PreAuthorize("@securityService.canAssignRole(#companyId, #request.role.name())")
+    public ResponseEntity<UserCompanyRoleResponseDto> updateRole(
+            @PathVariable UUID companyId,
+            @PathVariable UUID roleId,
+            @Valid @RequestBody UserCompanyRoleCreateRequestDto request) {
+
+        UserCompanyRole existing = roleService.getRoleById(roleId);
+        if (!companyId.equals(existing.getCompanyId())) {
+            throw new com.olenanoskova.task_and_time_tracker.exception.UserCompanyRoleNotFoundException(roleId);
+        }
+        UserCompanyRole role = roleMapper.toDomain(request);
+        role.setCompanyId(companyId);
+        UserCompanyRole updated = roleService.updateRole(roleId, role);
+
+        return ResponseEntity.ok(roleMapper.toDto(updated));
+    }
+
+    @DeleteMapping("/{roleId}")
+    @PreAuthorize("@securityService.canRemoveCompanyRole(#companyId, #roleId)")
+    public ResponseEntity<Void> removeRole(
+            @PathVariable UUID companyId,
+            @PathVariable UUID roleId) {
+
+        roleService.deleteRole(roleId);
+        return ResponseEntity.noContent().build();
     }
 
 }

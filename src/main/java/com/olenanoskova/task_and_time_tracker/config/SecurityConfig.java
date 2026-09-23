@@ -1,9 +1,11 @@
 package com.olenanoskova.task_and_time_tracker.config;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.olenanoskova.task_and_time_tracker.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -29,6 +31,9 @@ import org.springframework.web.cors.CorsConfiguration;
 public class SecurityConfig {
 
     private final TokenAuthFilter tokenAuthFilter;
+
+    @Value("${app.cors.allowed-origins:*}")
+    private String corsAllowedOrigins;
 
     /*
      * Custom UserDetailsService bean to disable Spring Boot's default in-memory user.
@@ -61,7 +66,16 @@ public class SecurityConfig {
                                                 "/swagger-ui/**",
                                                 "/v3/api-docs/**",
                                                 "/auth/login",
-                                                "/auth/sign-up/**"
+                                                "/auth/signup/**",
+                                                "/auth/sign-up/**",
+                                                // SPA frontend served from the same service:
+                                                "/",
+                                                "/index.html",
+                                                "/styles.css",
+                                                "/js/**",
+                                                "/favicon.ico"
+
+
                                         )
                                         .permitAll()
                                         .anyRequest()
@@ -71,7 +85,11 @@ public class SecurityConfig {
                                 cors.configurationSource(
                                         _ -> {
                                             CorsConfiguration configuration = new CorsConfiguration();
-                                            configuration.setAllowedOrigins(List.of("*"));
+                                            List<String> origins = Arrays.stream(corsAllowedOrigins.split(","))
+                                                    .map(String::trim)
+                                                    .filter(s -> !s.isEmpty())
+                                                    .toList();
+                                            configuration.setAllowedOrigins(origins);
                                             configuration.setAllowedMethods(List.of("*"));
                                             configuration.setAllowedHeaders(List.of("*"));
                                             return configuration;

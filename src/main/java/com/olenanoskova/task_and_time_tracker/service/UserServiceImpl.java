@@ -39,6 +39,11 @@ public class UserServiceImpl implements UserService {
             throw new UserAlreadyExistException(user.getEmail());
         }
 
+        if (user.getPhoneNumber() != null
+                && userRepository.findByPhoneNumber(user.getPhoneNumber()).isPresent()) {
+            throw new UserAlreadyExistException(user.getPhoneNumber());
+        }
+
         user.setStatus(Status.ACTIVE);
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
@@ -54,7 +59,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getUsers(UUID companyId) {
-        List<UserEntity> entities = userRepository.findAll();
+        List<UserEntity> entities = companyId == null
+                ? userRepository.findAll()
+                : userRepository.findAllByCompanyId(companyId);
         return entities.stream()
                 .map(userMapper::toDomain)
                 .toList();
@@ -128,7 +135,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User updateRole(UUID userId, Role newRole) {
         UserEntity entity = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new UserNotFoundException(userId));
 
         entity.setRole(RoleEntity.valueOf(newRole.name()));
 

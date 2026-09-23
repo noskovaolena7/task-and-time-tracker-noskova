@@ -5,6 +5,7 @@ import com.olenanoskova.task_and_time_tracker.controller.dto.ProjectCreateReques
 import com.olenanoskova.task_and_time_tracker.controller.dto.ProjectResponseDto;
 import com.olenanoskova.task_and_time_tracker.controller.dto.ProjectUpdateRequestDto;
 import com.olenanoskova.task_and_time_tracker.mapper.ProjectMapper;
+import com.olenanoskova.task_and_time_tracker.security.SecurityService;
 import com.olenanoskova.task_and_time_tracker.service.ProjectService;
 import com.olenanoskova.task_and_time_tracker.service.model.Project;
 import jakarta.validation.Valid;
@@ -24,6 +25,7 @@ public class ProjectController {
 
     private final ProjectService projectService;
     private final ProjectMapper projectMapper;
+    private final SecurityService securityService;
 
     @PostMapping
     @PreAuthorize("@securityService.canCreateProject(#request.companyId)")
@@ -37,10 +39,42 @@ public class ProjectController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     @GetMapping
-    @PreAuthorize("@securityService.canListUsers()")
-    public ResponseEntity<List<ProjectResponseDto>> getAllProjects() {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<ProjectResponseDto>> getAllProjects(
+            @RequestParam(required = false, defaultValue = "0") Integer page,
+            @RequestParam(required = false, defaultValue = "20") Integer size,
+            @RequestParam(name = "company_id", required = false) UUID companyId) {
 
-        List<Project> projects = projectService.getProjects(0, 20, null);
+        UUID currentUserId = securityService.getCurrentUserId();
+        List<UUID> ownCompanyIds = securityService.getCurrentUserCompanyIds();
+
+        List<Project> projects;
+        if (ownCompanyIds.isEmpty()) {
+            // Personal workspace: only own projects without a company.
+            projects = projectService.getPersonalProjects(currentUserId, page, size);
+        } else {
+            if (companyId != null && !ownCompanyIds.contains(companyId)) {
+                throw new org.springframework.security.access.AccessDeniedException(
+                        "Cannot list projects of another company");
+            }
+            UUID scope = companyId != null ? companyId : null;
+            projects = new java.util.ArrayList<>();
+            if (scope != null) {
+                projects.addAll(projectService.getProjects(page, size, scope));
+            } else {
+                // All projects of all own companies.
+                for (UUID ownCompany : ownCompanyIds) {
+                    projects.addAll(projectService.getProjects(null, null, ownCompany));
+                }
+                if (page != null && size != null) {
+                    int from = Math.min(page * size, projects.size());
+                    int to = Math.min(from + size, projects.size());
+                    projects = projects.subList(from, to);
+                }
+            }
+            // Personal projects remain visible alongside company ones.
+            projects.addAll(projectService.getPersonalProjects(currentUserId, null, null));
+        }
         List<ProjectResponseDto> responseList = projects.stream()
                 .map(projectMapper::toDto)
                 .toList();

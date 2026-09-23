@@ -6,7 +6,10 @@ import com.olenanoskova.task_and_time_tracker.controller.dto.CompanyResponseDto;
 import com.olenanoskova.task_and_time_tracker.mapper.CompanyMapper;
 import com.olenanoskova.task_and_time_tracker.security.SecurityService;
 import com.olenanoskova.task_and_time_tracker.service.CompanyService;
+import com.olenanoskova.task_and_time_tracker.service.UserCompanyRoleService;
 import com.olenanoskova.task_and_time_tracker.service.model.Company;
+import com.olenanoskova.task_and_time_tracker.service.model.MemberRole;
+import com.olenanoskova.task_and_time_tracker.service.model.UserCompanyRole;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +28,7 @@ public class CompanyController {
     private final CompanyService companyService;
     private final CompanyMapper companyMapper;
     private final SecurityService securityService;
+    private final UserCompanyRoleService userCompanyRoleService;
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
@@ -33,6 +37,16 @@ public class CompanyController {
 
         Company company = companyMapper.toDomain(request);
         Company createdCompany = companyService.createCompany(company);
+
+        // The declared owner becomes OWNER of the new company, so isolation
+        // by company works from the very first request.
+        if (request.getOwnerId() != null) {
+            UserCompanyRole ownerRole = new UserCompanyRole();
+            ownerRole.setUserId(request.getOwnerId());
+            ownerRole.setRole(MemberRole.OWNER);
+            userCompanyRoleService.assignRole(createdCompany.getId(), ownerRole);
+        }
+
         CompanyResponseDto response = companyMapper.toDto(createdCompany);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -51,7 +65,7 @@ public class CompanyController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("@securityService.canAccessUser(#id)")
+    @PreAuthorize("@securityService.canAccessCompany(#id)")
     public ResponseEntity<CompanyResponseDto> getCompanyById(@PathVariable UUID id) {
 
         Company company = companyService.getCompanyById(id);
@@ -61,7 +75,7 @@ public class CompanyController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@securityService.hasCompanyRole(#id, securityService.getCurrentUserId(), 'OWNER')")
+    @PreAuthorize("@securityService.canManageCompany(#id)")
     public ResponseEntity<CompanyResponseDto> updateCompany(
             @PathVariable UUID id,
             @Valid @RequestBody CompanyUpdateRequestDto request) {
@@ -75,7 +89,7 @@ public class CompanyController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("@securityService.hasCompanyRole(#id, securityService.getCurrentUserId(), 'OWNER')")
+    @PreAuthorize("@securityService.canManageCompany(#id)")
     public ResponseEntity<Void> deleteCompany(@PathVariable UUID id) {
         companyService.deleteCompany(id);
         return ResponseEntity.noContent().build();

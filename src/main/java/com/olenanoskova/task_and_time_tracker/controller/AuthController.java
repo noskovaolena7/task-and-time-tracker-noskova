@@ -22,22 +22,22 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @PostMapping("/auth/sign-up/personal")
+    @PostMapping({"/auth/signup/personal", "/auth/sign-up/personal"})
     @PreAuthorize("permitAll()")
     public ResponseEntity<TokenResponseDto> signUpPersonal(
             @Valid @RequestBody RegisterUserRequestDto request) {
 
-        log.info("Received personal sign-up request for {}", request.getEmail());
+        log.info("Received personal signup request for {}", request.getEmail());
         String token = authService.signUpPersonalUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(new TokenResponseDto(token));
     }
 
-    @PostMapping("/auth/sign-up/company")
+    @PostMapping({"/auth/signup/company", "/auth/sign-up/company"})
     @PreAuthorize("permitAll()")
     public ResponseEntity<TokenResponseDto> signUpCompany(
             @Valid @RequestBody RegisterCompanyRequestDto request) {
 
-        log.info("Received company sign-up request for {}", request.getEmail());
+        log.info("Received company signup request for {}", request.getEmail());
         String token = authService.signUpCompanyUser(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(new TokenResponseDto(token));
     }
@@ -51,4 +51,5 @@ public class AuthController {
         String token = authService.login(request.getEmail(), request.getPassword());
         return ResponseEntity.ok(new TokenResponseDto(token));
     }
+
 }

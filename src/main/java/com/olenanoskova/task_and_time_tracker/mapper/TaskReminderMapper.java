@@ -67,6 +67,7 @@ public class TaskReminderMapper {
         dto.setId(reminder.getId());
         dto.setTaskId(reminder.getTaskId());
         dto.setRemindAt(reminder.getRemindAt());
+        dto.setMessage(reminder.getMessage());
         dto.setCreatedBy(reminder.getCreatedBy());
         dto.setCreatedAt(reminder.getCreatedAt());
         dto.setUpdatedAt(reminder.getUpdatedAt());
