@@ -69,6 +69,10 @@ public class ProjectDeadlineServiceImpl implements ProjectDeadlineService {
         ProjectDeadlineEntity entity = projectDeadlineRepository.findById(deadlineId)
                 .orElseThrow(() -> new ProjectDeadlineNotFoundException(deadlineId));
 
+        if (projectId != null && !projectId.equals(entity.getProjectId())) {
+            throw new ProjectDeadlineNotFoundException(deadlineId);
+        }
+
         entity.setDeadline(request.getDeadline());
         entity.setTitle(request.getTitle());
         entity.setUpdatedAt(Instant.now());

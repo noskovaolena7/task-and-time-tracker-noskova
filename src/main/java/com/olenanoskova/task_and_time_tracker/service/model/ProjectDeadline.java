@@ -15,6 +15,7 @@ import java.util.UUID;
 public class ProjectDeadline {
     private UUID id;
     private UUID projectId;
+    private String title;
     private Instant deadline;
     private List<String> reminderPeriods;
     private UUID createdBy;

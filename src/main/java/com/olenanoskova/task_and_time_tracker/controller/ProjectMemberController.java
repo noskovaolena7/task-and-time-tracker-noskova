@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,7 +39,7 @@ public class ProjectMemberController {
     @PreAuthorize("@securityService.canAddProjectMember(#projectId)")
     public ResponseEntity<ProjectMemberResponseDto> addMemberToProject(
             @PathVariable UUID projectId,
-            @RequestBody ProjectMemberCreateRequestDto request) {
+            @Valid @RequestBody ProjectMemberCreateRequestDto request) {
 
         ProjectMember member = memberMapper.toDomain(projectId, request);
         ProjectMember assignedMember = memberService.addMember(projectId, member);

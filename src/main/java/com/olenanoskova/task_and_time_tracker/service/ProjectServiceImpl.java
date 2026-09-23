@@ -1,5 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.service;
 
+import com.olenanoskova.task_and_time_tracker.exception.BadRequestException;
 import com.olenanoskova.task_and_time_tracker.exception.CompanyNotFoundException;
 import com.olenanoskova.task_and_time_tracker.exception.ProjectAlreadyExistException;
 import com.olenanoskova.task_and_time_tracker.exception.ProjectNotFoundException;
@@ -32,17 +33,30 @@ public class ProjectServiceImpl implements ProjectService {
 
         log.info("Attempting to create project with name {}", project.getName());
 
-        // Check company exists
-        if (!companyRepository.existsById(project.getCompanyId())) {
-            throw new CompanyNotFoundException(project.getCompanyId());
-        }
+        if (project.getCompanyId() != null) {
+            // Company project: company must exist, name unique inside company
+            if (!companyRepository.existsById(project.getCompanyId())) {
+                throw new CompanyNotFoundException(project.getCompanyId());
+            }
 
-        // Optional: check unique name inside company
-        Optional<ProjectEntity> existing =
-                projectRepository.findByNameAndCompanyId(project.getName(), project.getCompanyId());
+            Optional<ProjectEntity> existing =
+                    projectRepository.findByNameAndCompanyId(project.getName(), project.getCompanyId());
 
-        if (existing.isPresent()) {
-            throw new ProjectAlreadyExistException(project.getName());
+            if (existing.isPresent()) {
+                throw new ProjectAlreadyExistException(project.getName());
+            }
+        } else {
+            // Personal project (no company): name unique per creator
+            if (project.getCreatedBy() == null) {
+                throw new BadRequestException("Creator ID is required for a personal project");
+            }
+
+            Optional<ProjectEntity> existing = projectRepository
+                    .findByNameAndCreatedByAndCompanyIdIsNull(project.getName(), project.getCreatedBy());
+
+            if (existing.isPresent()) {
+                throw new ProjectAlreadyExistException(project.getName());
+            }
         }
 
         project.setCreatedAt(Instant.now());
@@ -69,6 +83,24 @@ public class ProjectServiceImpl implements ProjectService {
             entities = projectRepository.findAll(PageRequest.of(page, size)).getContent();
         } else {
             entities = projectRepository.findAll();
+        }
+
+        return entities.stream()
+                .map(projectMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Project> getPersonalProjects(UUID userId, Integer page, Integer size) {
+
+        log.info("Fetching personal projects for user {}, page={}, size={}", userId, page, size);
+
+        List<ProjectEntity> entities = projectRepository.findByCompanyIdIsNullAndCreatedBy(userId);
+
+        if (page != null && size != null) {
+            int from = Math.min(page * size, entities.size());
+            int to = Math.min(from + size, entities.size());
+            entities = entities.subList(from, to);
         }
 
         return entities.stream()

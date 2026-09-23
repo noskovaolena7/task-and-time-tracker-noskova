@@ -18,6 +18,9 @@ public class TaskReminderResponseDto {
     @NotNull(message = "Reminder timestamp cannot be null")
     private Instant remindAt;
 
+    @Size(max = 500, message = "Reminder message must be <= 500 characters")
+    private String message;
+
     @NotNull(message = "Creator ID cannot be null")
     private UUID createdBy;
 

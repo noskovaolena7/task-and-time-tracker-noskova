@@ -21,6 +21,7 @@ public class TaskHistoryEntity {
 
     private UUID userId;
 
+    @Column(name = "field_changed") // DB column is `field_changed`, domain field is `field`
     private String field;
 
     private String oldValue;

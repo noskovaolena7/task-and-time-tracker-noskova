@@ -1,7 +1,5 @@
 package com.olenanoskova.task_and_time_tracker.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -14,21 +12,11 @@ import org.springframework.context.annotation.Configuration;
 /***
  * Перейдіть у браузері за посиланням
  * http://localhost:8080/swagger-ui/index.html
+ *
+ * JSON naming (SNAKE_CASE, as documented in api.yaml) is configured globally via
+ * spring.jackson.property-naming-strategy — no custom ObjectMapper needed.
  ***/
 public class OpenApiConfig {
-
-    @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setPropertyNamingStrategy(
-                com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE);
-        return objectMapper;
-    }
-
-    @Bean
-    public ModelResolver modelResolver(ObjectMapper objectMapper) {
-        return new ModelResolver(objectMapper);
-    }
 
     @Bean
     public OpenAPI customOpenAPI() {
@@ -37,9 +25,9 @@ public class OpenApiConfig {
         return new OpenAPI()
                 .info(
                         new Info()
-                                .title("Loyalty Card")
+                                .title("Project & Task Management API")
                                 .version("1.0.0")
-                                .description("API documentation for the Loyalty Card application"))
+                                .description("API documentation for the Task and time tracker application"))
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
                 .components(
                         new Components()

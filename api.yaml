@@ -75,16 +75,40 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /auth/signup:
+  /auth/signup/personal:
     post:
-      summary: Register new user
+      summary: Register personal user (personal workspace)
       tags: [Auth]
       security: []
       requestBody:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/SignUpRequest"
+              $ref: "#/components/schemas/PersonalSignUpRequest"
+      responses:
+        201:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/signup/company:
+    post:
+      summary: Register company user (company workspace)
+      tags: [Auth]
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanySignUpRequest"
       responses:
         201:
           description: Created
@@ -104,18 +128,6 @@ paths:
     get:
       summary: Get all companies
       tags: [Companies]
-      parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-            minimum: 0
-        - in: query
-          name: size
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
       responses:
         200:
           description: OK
@@ -183,7 +195,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/CompanyCreateRequest"
+              $ref: "#/components/schemas/CompanyUpdateRequest"
       responses:
         200:
           description: Updated
@@ -256,23 +268,151 @@ paths:
         201:
           description: Created
 
+  /companies/{companyId}/roles/{roleId}:
+    put:
+      summary: Change user role in company (promotion/demotion)
+      description: OWNER may grant USER, MANAGER, ADMIN and OWNER (co-owners with equal rights). ADMIN may grant USER and MANAGER only.
+      tags: [Company Roles]
+      parameters:
+        - $ref: "#/components/parameters/companyId"
+        - in: path
+          name: roleId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCompanyRoleCreateRequest"
+      responses:
+        200:
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCompanyRole"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+
+  /companies/{companyId}/roles/{roleId}:
+    delete:
+      summary: Remove role (leave company or remove a member)
+      description: A user may always remove their own row (leave). OWNER may remove anyone except the recorded owner. ADMIN may remove USER and MANAGER rows.
+      tags: [Company Roles]
+      parameters:
+        - $ref: "#/components/parameters/companyId"
+        - in: path
+          name: roleId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: Deleted
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /workspaces:
+    get:
+      summary: Get my workspaces
+      description: Personal workspace plus company workspaces of all memberships. Personal workspace stays until the owner deletes it.
+      tags: [Users]
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workspace"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /workspaces/{workspaceId}:
+    delete:
+      summary: Delete workspace (owner only)
+      tags: [Users]
+      parameters:
+        - in: path
+          name: workspaceId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: Deleted
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
 
   /users:
     get:
       summary: Get all users
       tags: [Users]
-      parameters:
-        - in: query
-          name: page
-          schema:
-            type: integer
-            minimum: 0
-        - in: query
-          name: size
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 100
       responses:
         200:
           description: OK
@@ -282,34 +422,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/User"
-        401:
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-    post:
-      summary: Create new user
-      tags: [Users]
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/UserCreateRequest"
-      responses:
-        201:
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/User"
-        400:
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
         401:
           description: Unauthorized
           content:
@@ -582,6 +694,30 @@ paths:
                 $ref: "#/components/schemas/Error"
         403:
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+
+  /projects/{projectId}/members/{userId}:
+    delete:
+      summary: Remove member from project
+      tags: [Project Members]
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+        - $ref: "#/components/parameters/userId"
+      responses:
+        204:
+          description: Deleted
+        401:
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -943,11 +1079,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /notifications/{notificationId}/read:
+  /users/{userId}/notifications/{notificationId}/read:
     put:
       summary: Mark notification as read
       tags: [Notifications]
       parameters:
+        - $ref: "#/components/parameters/userId"
         - $ref: "#/components/parameters/notificationId"
       responses:
         200:
@@ -1041,6 +1178,77 @@ paths:
                 $ref: "#/components/schemas/Error"
 
 
+  /tasks/{taskId}/attachments/{attachmentId}:
+    put:
+      summary: Update attachment
+      tags: [Attachments]
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+        - in: path
+          name: attachmentId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttachmentCreateRequest"
+      responses:
+        200:
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attachment"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: Delete attachment
+      tags: [Attachments]
+      parameters:
+        - $ref: "#/components/parameters/taskId"
+        - in: path
+          name: attachmentId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: Deleted
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+
   /projects/{projectId}/deadlines:
     get:
       summary: Get deadlines for project
@@ -1082,6 +1290,49 @@ paths:
       responses:
         201:
           description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectDeadline"
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /projects/{projectId}/deadlines/{deadlineId}:
+    put:
+      summary: Update project deadline
+      tags: [Project Deadlines]
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+        - in: path
+          name: deadlineId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectDeadlineUpdateRequest"
+      responses:
+        200:
+          description: Updated
           content:
             application/json:
               schema:
@@ -1198,7 +1449,9 @@ paths:
     post:
       tags: [ Invites ]
       summary: Accept invite by code
-      description: Accept an invite and join the company.
+      description: Accept an invite and join the company. Existing memberships
+        (including the personal workspace) are kept - a user may belong to
+        several companies. Requires authentication; the current user joins.
       parameters:
         - in: path
           name: code
@@ -1211,7 +1464,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Company"
+                $ref: "#/components/schemas/InviteAcceptResponse"
         400:
           description: Invalid or expired invite
           content:
@@ -1292,7 +1545,7 @@ components:
           required: true
           example: 'Best_secure_password'
 
-    SignUpRequest:
+    PersonalSignUpRequest:
       type: object
       required: [ first_name, last_name, email, password, phone_number ]
       properties:
@@ -1320,6 +1573,41 @@ components:
           required: true
           example: +417612312312
 
+    CompanySignUpRequest:
+      type: object
+      required: [ first_name, last_name, email, password, phone_number, company_name ]
+      properties:
+        first_name:
+          type: string
+          required: true
+          example: Vasya
+        last_name:
+          type: string
+          required: true
+          example: Pupkin
+        email:
+          type: string
+          format: email
+          required: true
+          example: "codillas@gmail.com"
+        password:
+          type: string
+          format: password
+          writeOnly: true
+          required: true
+          example: 'Best_secure_password'
+        phone_number:
+          type: string
+          required: true
+          example: +417612312312
+        company_name:
+          type: string
+          required: true
+          example: Acme Inc
+        company_description:
+          type: string
+          example: Task tracking for Acme
+
     TokenResponse:
       type: object
       required: [ token ]
@@ -1329,13 +1617,6 @@ components:
           format: text
           description: JWT
           example: eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhZG1pbiJ9.abc123
-        tokenType:
-          type: string
-          example: Bearer
-        expiresIn:
-          type: integer
-          description: Token lifetime in seconds
-          example: 3600
 
     User:
       type: object
@@ -1356,68 +1637,13 @@ components:
           format: email
           required: true
           example: "codillas@gmail.com"
-        password:
-          type: string
-          format: password
-          writeOnly: true
-          required: true
-          example: 'Best_secure_password'
         phone_number:
           type: string
           required: true
           example: +417612312312
-        status:
+        member_role:
           type: string
-          enum: [ ACTIVE, BLOCKED, DELETED ]
-        role:
-            type: string
-            enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
-        workspace_id:
-            type: string
-            format: uuid
-        company_id:
-            type: string
-            format: uuid
-        created_at:
-          type: string
-          format: date-time
-        updated_at:
-          type: string
-          format: date-time
-
-    UserCreateRequest:
-      type: object
-      required: [ first_name, last_name, email, password, phone_number ]
-      properties:
-        first_name:
-          type: string
-          required: true
-          example: Vasya
-        last_name:
-          type: string
-          required: true
-          example: Pupkin
-        email:
-          type: string
-          format: email
-          required: true
-          example: "codillas@gmail.com"
-        password:
-          type: string
-          format: password
-          writeOnly: true
-          required: true
-          example: 'Best_secure_password'
-        phone_number:
-          type: string
-          required: true
-          example: +417612312312
-        status:
-          type: string
-          enum: [ ACTIVE, BLOCKED, DELETED ]
-        role:
-            type: string
-            enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
+          enum: [ USER, MANAGER, ADMIN, OWNER ]
 
     UserUpdateRequest:
       type: object
@@ -1428,6 +1654,13 @@ components:
           type: string
         phone_number:
           type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          writeOnly: true
 
     Company:
       type: object
@@ -1437,12 +1670,14 @@ components:
           format: uuid
         name:
           type: string
+        description:
+          type: string
         owner_id:
           type: string
           format: uuid
         workspace_id:
-            type: string
-            format: uuid
+          type: string
+          format: uuid
         created_at:
           type: string
           format: date-time
@@ -1452,9 +1687,22 @@ components:
 
     CompanyCreateRequest:
       type: object
-      required: [ name ]
+      required: [ owner_id, name ]
+      properties:
+        owner_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+
+    CompanyUpdateRequest:
+      type: object
       properties:
         name:
+          type: string
+        description:
           type: string
 
     UserCompanyRole:
@@ -1471,7 +1719,7 @@ components:
           format: uuid
         role:
           type: string
-          enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
+          enum: [ USER, MANAGER, ADMIN, OWNER ]
         created_at:
           type: string
           format: date-time
@@ -1489,6 +1737,7 @@ components:
         role:
           type: string
           enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
+          description: PERSONAL_USER and COMPANY_USER are accepted and map to USER.
 
     Project:
       type: object
@@ -1516,15 +1765,19 @@ components:
 
     ProjectCreateRequest:
       type: object
-      required: [ company_id, name, description]
+      required: [ name, created_by ]
       properties:
         company_id:
           type: string
           format: uuid
+          description: Omit for a personal project (no company).
         name:
           type: string
         description:
           type: string
+        created_by:
+          type: string
+          format: uuid
 
     ProjectUpdateRequest:
       type: object
@@ -1607,7 +1860,7 @@ components:
 
     TaskCreateRequest:
       type: object
-      required: [ project_id, title, description, status, priority ]
+      required: [ project_id, title, status, priority, created_by ]
       properties:
         project_id:
           type: string
@@ -1653,7 +1906,7 @@ components:
 
     TimeEntryCreateRequest:
       type: object
-      required: [ user_id, start_time ]
+      required: [ user_id, start_time, end_time ]
       properties:
         user_id:
           type: string
@@ -1694,12 +1947,12 @@ components:
 
     CommentCreateRequest:
       type: object
-      required: [ user_id, message ]
+      required: [ user_id, text ]
       properties:
         user_id:
           type: string
           format: uuid
-        message:
+        text:
           type: string
 
     Comment:
@@ -1714,7 +1967,7 @@ components:
         user_id:
           type: string
           format: uuid
-        message:
+        text:
           type: string
         created_at:
           type: string
@@ -1786,22 +2039,16 @@ components:
 
     AttachmentCreateRequest:
       type: object
-      required: [ id, task_id, file_url, uploaded_by, uploaded_at ]
+      required: [ file_name, file_url, uploaded_by ]
       properties:
-        id:
+        file_name:
           type: string
-          format: uuid
-        task_id:
-          type: string
-          format: uuid
         file_url:
           type: string
         uploaded_by:
           type: string
           format: uuid
-        uploaded_at:
-          type: string
-          format: date-time
+          description: Ignored on create/update — the uploader is taken from the auth token.
 
     Attachment:
       type: object
@@ -1819,12 +2066,6 @@ components:
           type: string
         file_url:
           type: string
-        owner_id:
-          type: string
-          format: uuid
-        created_at:
-          type: string
-          format: date-tim
         uploaded_by:
           type: string
           format: uuid
@@ -1844,6 +2085,8 @@ components:
         project_id:
           type: string
           format: uuid
+        title:
+          type: string
         deadline:
           type: string
           format: date-time
@@ -1863,7 +2106,7 @@ components:
 
     ProjectDeadlineCreateRequest:
       type: object
-      required: [ deadline, reminder_periods]
+      required: [ deadline, reminder_periods, created_by ]
       properties:
         deadline:
           type: string
@@ -1872,6 +2115,19 @@ components:
           type: array
           items:
             type: string
+        created_by:
+          type: string
+          format: uuid
+
+    ProjectDeadlineUpdateRequest:
+      type: object
+      required: [ deadline, title ]
+      properties:
+        deadline:
+          type: string
+          format: date-time
+        title:
+          type: string
 
     TaskReminder:
       type: object
@@ -1882,10 +2138,11 @@ components:
         task_id:
           type: string
           format: uuid
-        reminder_periods:
-          type: array
-          items:
-            type: string
+        remind_at:
+          type: string
+          format: date-time
+        message:
+          type: string
         created_by:
           type: string
           format: uuid
@@ -1898,12 +2155,13 @@ components:
 
     TaskReminderCreateRequest:
       type: object
-      required: [ reminder_periods ]
+      required: [ remind_at, message, created_by ]
       properties:
-        reminder_periods:
-          type: array
-          items:
-            type: string
+        remind_at:
+          type: string
+          format: date-time
+        message:
+          type: string
         created_by:
           type: string
           format: uuid
@@ -1916,6 +2174,9 @@ components:
           format: uuid
         name:
           type: string
+        type:
+          type: string
+          enum: [ PERSONAL, COMPANY ]
         owner_id:
           type: string
           format: uuid
@@ -1945,21 +2206,26 @@ components:
           format: date-time
         role:
           type: string
-          enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
+          enum: [ USER, MANAGER, ADMIN, OWNER ]
 
 
     InviteCreateRequest:
       type: object
       required:
           - company_id
-          - role
       properties:
         company_id:
           type: string
           format: uuid
-        role:
+
+    InviteAcceptResponse:
+      type: object
+      required:
+          - company_id
+      properties:
+        company_id:
           type: string
-          enum: [ USER, MANAGER, ADMIN, OWNER, PERSONAL_USER, COMPANY_USER ]
+          format: uuid
 
 
     Error:

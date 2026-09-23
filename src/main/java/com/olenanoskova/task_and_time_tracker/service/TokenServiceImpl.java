@@ -29,6 +29,15 @@ public class TokenServiceImpl implements TokenService {
     @Value("${jwt.ttl-millis}")
     private Long jwtTtlMillis;
 
+    @jakarta.annotation.PostConstruct
+    void checkSecretStrength() {
+        int bytes = jwtSecret == null ? 0 : jwtSecret.getBytes(StandardCharsets.UTF_8).length;
+        if (bytes < 32) {
+            throw new IllegalStateException(
+                    "JWT secret must be at least 32 bytes (256 bits). Set a strong JWT_SECRET env variable.");
+        }
+    }
+
     @Override
     public String createToken(String userId, Role role) {
 

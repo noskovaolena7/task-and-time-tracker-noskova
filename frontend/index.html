@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task &amp; Time Tracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toasts"></div>
+
+  <div id="auth-view" class="auth-wrap hidden">
+    <div class="auth-card">
+      <h1>Task &amp; Time Tracker</h1>
+      <p class="muted">Трекер задач і часу — personal та company воркспейси</p>
+      <div class="tabs" id="auth-tabs">
+        <button data-tab="login" class="tab active">Вхід</button>
+        <button data-tab="personal" class="tab">Personal реєстрація</button>
+        <button data-tab="company" class="tab">Company реєстрація</button>
+        <button data-tab="invite" class="tab">Маю інвайт</button>
+      </div>
+      <form id="auth-form"></form>
+      <p class="hint" id="auth-hint"></p>
+    </div>
+  </div>
+
+  <div id="app-view" class="hidden">
+    <aside class="sidebar">
+      <div class="brand">Task &amp; Time</div>
+      <div class="me" id="me-box"></div>
+      <nav id="nav">
+        <button data-route="dashboard">Кабінет</button>
+        <button data-route="projects">Проєкти</button>
+        <button data-route="tasks">Задачі</button>
+        <button data-route="companies">Компанії</button>
+        <button data-route="team">Команда</button>
+        <button data-route="notifications">Сповіщення <span id="notif-badge" class="badge hidden"></span></button>
+        <button data-route="workspaces">Воркспейси</button>
+      </nav>
+      <button id="logout-btn" class="ghost">Вийти</button>
+    </aside>
+    <main id="main"></main>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

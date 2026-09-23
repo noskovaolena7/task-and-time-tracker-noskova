@@ -2,6 +2,9 @@ package com.olenanoskova.task_and_time_tracker.repository.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -24,7 +27,9 @@ public class ProjectDeadlineEntity {
 
     private Instant deadline;
 
-    @ElementCollection
+    // Maps directly onto the existing TEXT[] column (no @ElementCollection table needed)
+    @Column(name = "reminder_periods")
+    @JdbcTypeCode(SqlTypes.ARRAY)
     private List<String> reminderPeriods;
 
     private UUID createdBy;

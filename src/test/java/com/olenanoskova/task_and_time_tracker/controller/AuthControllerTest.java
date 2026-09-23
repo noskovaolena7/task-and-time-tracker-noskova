@@ -1,5 +1,6 @@
 package com.olenanoskova.task_and_time_tracker.controller;
 
+import com.olenanoskova.task_and_time_tracker.controller.dto.LoginRequestDto;
 import com.olenanoskova.task_and_time_tracker.controller.dto.RegisterUserRequestDto;
 import com.olenanoskova.task_and_time_tracker.controller.dto.RegisterCompanyRequestDto;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,5 +73,17 @@ class AuthControllerTest {
                         .content(om.writeValueAsString(req)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.token").value("tok-xyz"));
+    }
+
+    @Test
+    void login_returns200_andToken() throws Exception {
+        var req = new LoginRequestDto("a@b.com", "secret123");
+        when(authService.login("a@b.com", "secret123")).thenReturn("login-jwt-token");
+
+        mvc.perform(post("/auth/login")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content(om.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("login-jwt-token"));
     }
 }

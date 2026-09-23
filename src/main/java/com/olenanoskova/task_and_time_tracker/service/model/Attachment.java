@@ -25,6 +25,8 @@ public class Attachment {
 
     private Instant uploadedAt;
 
+    private Instant createdAt;
+
     private Instant updatedAt;
 }
 

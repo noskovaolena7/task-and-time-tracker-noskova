@@ -14,8 +14,17 @@ public interface ProjectRepository extends JpaRepository<ProjectEntity, UUID> {
 
     List<ProjectEntity> findByCompanyId(UUID companyId);
 
+    List<ProjectEntity> findByCreatedBy(UUID createdBy);
+
+    List<ProjectEntity> findByCompanyIdIsNullAndCreatedBy(UUID createdBy);
+
+    Optional<ProjectEntity> findByNameAndCreatedByAndCompanyIdIsNull(String name, UUID createdBy);
+
     @Query("SELECT p.companyId FROM ProjectEntity p WHERE p.id = :projectId")
     UUID findCompanyIdByProjectId(UUID projectId);
+
+    @Query("SELECT p.createdBy FROM ProjectEntity p WHERE p.id = :projectId")
+    UUID findCreatedByByProjectId(UUID projectId);
 
 }
 

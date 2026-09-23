@@ -19,10 +19,26 @@ public class UserCompanyRoleMapper {
     public UserCompanyRole toDomain(@Valid UserCompanyRoleCreateRequestDto dto) {
         UserCompanyRole role = new UserCompanyRole();
         role.setUserId(dto.getUserId());
-        role.setRole(MemberRole.valueOf(dto.getRole().name()));
+        role.setRole(mapToMemberRole(dto.getRole()));
         role.setCreatedAt(Instant.now());
         role.setUpdatedAt(Instant.now());
         return role;
+    }
+
+    /**
+     * Maps the 6-value API {@link RoleDto} onto the 4-value {@link MemberRole}:
+     * PERSONAL_USER/COMPANY_USER have no company-level equivalent and map to USER.
+     */
+    static MemberRole mapToMemberRole(RoleDto dto) {
+        if (dto == null) {
+            return null;
+        }
+        return switch (dto) {
+            case USER, PERSONAL_USER, COMPANY_USER -> MemberRole.USER;
+            case MANAGER -> MemberRole.MANAGER;
+            case ADMIN -> MemberRole.ADMIN;
+            case OWNER -> MemberRole.OWNER;
+        };
     }
 
     // Domain → Entity

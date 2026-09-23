@@ -3,15 +3,20 @@ spring:
     name: task-and-time-tracker
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/task_and_time_tracker
-    username: postgres
-    password: postgres_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/task_and_time_tracker}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres_password}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
       ddl-auto: none
     show-sql: true
+
+  jackson:
+    # Single source of truth for JSON naming: SNAKE_CASE everywhere
+    # (HTTP converters and Swagger models), as documented in api.yaml.
+    property-naming-strategy: SNAKE_CASE
 
   liquibase:
     enabled: true
@@ -22,5 +27,14 @@ logging:
     liquibase: INFO
 
 jwt:
-  secret: ${JWT_SECRET}
+  # Default is for local development only (>=32 bytes for HMAC-SHA256).
+  # ALWAYS override via JWT_SECRET env variable in production!
+  secret: ${JWT_SECRET:local-dev-secret-key-please-change-0123456789abcdef}
   ttl-millis: ${JWT_TTL:604800000}
+
+app:
+  # Comma-separated list of allowed frontend origins, e.g.
+  # CORS_ALLOWED_ORIGINS=https://app.example.com,https://admin.example.com
+  # Default "*" is for local development only.
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:*}

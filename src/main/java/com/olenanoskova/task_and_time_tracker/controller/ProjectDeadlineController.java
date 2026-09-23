@@ -56,7 +56,7 @@ public class ProjectDeadlineController {
     public ResponseEntity<ProjectDeadlineResponseDto> updateDeadline(
             @PathVariable UUID projectId,
             @PathVariable UUID deadlineId,
-            @RequestBody ProjectDeadlineUpdateRequestDto request) {
+            @Valid @RequestBody ProjectDeadlineUpdateRequestDto request) {
 
         ProjectDeadline updated = projectDeadlineService.updateDeadline(projectId, deadlineId, request);
         return ResponseEntity.ok(projectDeadlineMapper.toDto(updated));

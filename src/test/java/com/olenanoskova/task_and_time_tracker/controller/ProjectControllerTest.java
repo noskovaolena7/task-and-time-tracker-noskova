@@ -80,7 +80,12 @@ class ProjectControllerTest {
 
     @Test
     void getAllProjects_returns200_emptyList() throws Exception {
-        when(projectService.getProjects(0, 20, null)).thenReturn(java.util.List.of());
+        // No company on the mocked security context -> personal listing branch.
+        when(projectService.getPersonalProjects(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(0),
+                org.mockito.ArgumentMatchers.eq(20)))
+                .thenReturn(java.util.List.of());
 
         mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/projects"))
                 .andExpect(status().isOk())

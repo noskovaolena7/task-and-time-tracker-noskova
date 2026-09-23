@@ -14,6 +14,7 @@ import com.olenanoskova.task_and_time_tracker.service.model.ProjectMember;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -111,6 +112,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
+    @Transactional
     public void deleteMember(UUID projectId, UUID userId) {
 
         log.info("Attempting to delete member {} from project {}", userId, projectId);

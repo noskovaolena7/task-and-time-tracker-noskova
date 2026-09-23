@@ -30,6 +30,7 @@ public class NotificationEntity {
 
     private String message;
 
+    @Column(name = "is_read") // DB column is `is_read`, entity field is `read`
     private Boolean read;
 
     @Column(name = "scheduled_at")

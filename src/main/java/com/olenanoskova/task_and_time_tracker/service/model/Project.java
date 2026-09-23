@@ -15,6 +15,7 @@ public class Project {
     private String name;
     private String description;
     private UUID companyId;
+    private UUID createdBy;
     private Instant createdAt;
     private Instant updatedAt;
 }

@@ -9,7 +9,8 @@ import java.util.UUID;
 @Data
 public class TimeEntryCreateRequestDto {
 
-    @NotNull(message = "Task ID is required")
+    // Optional: task id is taken from the path /tasks/{taskId}/time-entries,
+    // the service overwrites any value sent here.
     private UUID taskId;
 
     @NotNull(message = "User ID is required")

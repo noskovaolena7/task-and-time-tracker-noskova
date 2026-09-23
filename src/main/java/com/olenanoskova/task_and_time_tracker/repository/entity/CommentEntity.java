@@ -21,6 +21,7 @@ public class CommentEntity {
 
     private UUID userId;
 
+    @Column(name = "message") // DB column is `message`, domain field is `text`
     private String text;
 
     @Column(name = "created_at")

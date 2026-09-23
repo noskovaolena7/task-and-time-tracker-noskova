@@ -40,6 +40,7 @@ public class ProjectDeadlineMapper {
         ProjectDeadlineEntity entity = new ProjectDeadlineEntity();
         entity.setId(deadline.getId());
         entity.setProjectId(deadline.getProjectId());
+        entity.setTitle(deadline.getTitle());
         entity.setDeadline(deadline.getDeadline());
         entity.setReminderPeriods(deadline.getReminderPeriods());
         entity.setCreatedBy(deadline.getCreatedBy());
@@ -53,6 +54,7 @@ public class ProjectDeadlineMapper {
         ProjectDeadline deadline = new ProjectDeadline();
         deadline.setId(entity.getId());
         deadline.setProjectId(entity.getProjectId());
+        deadline.setTitle(entity.getTitle());
         deadline.setDeadline(entity.getDeadline());
         deadline.setReminderPeriods(entity.getReminderPeriods());
         deadline.setCreatedBy(entity.getCreatedBy());
@@ -66,6 +68,7 @@ public class ProjectDeadlineMapper {
         ProjectDeadlineResponseDto dto = new ProjectDeadlineResponseDto();
         dto.setId(deadline.getId());
         dto.setProjectId(deadline.getProjectId());
+        dto.setTitle(deadline.getTitle());
         dto.setDeadline(deadline.getDeadline());
         dto.setReminderPeriods(deadline.getReminderPeriods());
         dto.setCreatedBy(deadline.getCreatedBy());

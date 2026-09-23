@@ -23,6 +23,9 @@ public class ProjectEntity {
 
     private UUID companyId;
 
+    @Column(name = "created_by") // DB: projects.created_by UUID NOT NULL
+    private UUID createdBy;
+
     @Column(name = "created_at")
     private Instant createdAt;
 

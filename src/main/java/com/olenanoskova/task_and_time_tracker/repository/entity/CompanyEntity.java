@@ -21,6 +21,12 @@ public class CompanyEntity {
 
     private String description;
 
+    @Column(name = "owner_id")
+    private UUID ownerId;
+
+    @Column(name = "workspace_id")
+    private UUID workspaceId;
+
     @Column(name = "created_at")
     private Instant createdAt;
 

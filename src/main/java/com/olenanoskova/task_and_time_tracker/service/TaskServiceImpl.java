@@ -195,7 +195,7 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public UUID getProjectIdByTaskId(UUID taskId) {
         TaskEntity task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new TaskNotFoundException(taskId));
         return task.getProjectId();
     }
 }

@@ -44,6 +44,7 @@ public class AttachmentServiceImpl implements AttachmentService {
 
         attachment.setTaskId(taskId);
         attachment.setUploadedAt(Instant.now());
+        attachment.setCreatedAt(Instant.now());
         attachment.setUpdatedAt(Instant.now());
 
         AttachmentEntity entity = attachmentMapper.toEntity(attachment);
@@ -115,7 +116,10 @@ public class AttachmentServiceImpl implements AttachmentService {
 
         log.info("Attempting to delete attachment {}", attachmentId);
 
-        if (!attachmentRepository.existsById(attachmentId)) {
+        AttachmentEntity entity = attachmentRepository.findById(attachmentId)
+                .orElseThrow(() -> new AttachmentNotFoundException(attachmentId));
+
+        if (taskId != null && !taskId.equals(entity.getTaskId())) {
             throw new AttachmentNotFoundException(attachmentId);
         }
 
