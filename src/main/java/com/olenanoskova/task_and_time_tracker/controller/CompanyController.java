@@ -1,6 +1,7 @@
 package com.olenanoskova.task_and_time_tracker.controller;
 
 import com.olenanoskova.task_and_time_tracker.controller.dto.CompanyCreateRequestDto;
+import com.olenanoskova.task_and_time_tracker.controller.dto.CompanyMemberDto;
 import com.olenanoskova.task_and_time_tracker.controller.dto.CompanyUpdateRequestDto;
 import com.olenanoskova.task_and_time_tracker.controller.dto.CompanyResponseDto;
 import com.olenanoskova.task_and_time_tracker.mapper.CompanyMapper;
@@ -53,10 +54,15 @@ public class CompanyController {
     }
 
     @GetMapping
-    @PreAuthorize("@securityService.canListUsers()")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<CompanyResponseDto>> getAllCompanies() {
 
-        List<Company> companies = companyService.getCompanies();
+        // Scoped to own memberships only (see method body), so any
+        // authenticated user may list - strangers see nothing.
+        List<UUID> companyIds = securityService.getCurrentUserCompanyIds();
+        List<Company> companies = companyIds.stream()
+                .map(companyService::getCompanyById)
+                .toList();
         List<CompanyResponseDto> responseList = companies.stream()
                 .map(companyMapper::toDto)
                 .toList();
@@ -72,6 +78,13 @@ public class CompanyController {
         CompanyResponseDto response = companyMapper.toDto(company);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}/members")
+    @PreAuthorize("@securityService.canAccessCompany(#id)")
+    public ResponseEntity<List<CompanyMemberDto>> getMembers(@PathVariable UUID id) {
+        UUID requesterId = securityService.getCurrentUserId();
+        return ResponseEntity.ok(userCompanyRoleService.getVisibleMembers(id, requesterId));
     }
 
     @PutMapping("/{id}")

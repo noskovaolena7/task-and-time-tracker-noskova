@@ -84,6 +84,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public UUID getUserIdByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(UserEntity::getId)
+                .orElseThrow(() -> new com.olenanoskova.task_and_time_tracker.exception.ResourceNotFoundException(
+                        "User with email " + email + " not found"));
+    }
+
+    @Override
     public User activateUser(UUID id) {
         UserEntity entity = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));

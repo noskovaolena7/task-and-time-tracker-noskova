@@ -19,6 +19,9 @@ public class NotificationEntity {
 
     private UUID userId;
 
+    @Column(name = "sender_id")
+    private UUID senderId;
+
     private UUID projectId;
 
     private UUID taskId;

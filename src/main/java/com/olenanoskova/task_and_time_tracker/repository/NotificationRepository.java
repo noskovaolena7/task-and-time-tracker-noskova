@@ -10,7 +10,14 @@ import java.util.UUID;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<NotificationEntity, UUID> {
+
     List<NotificationEntity> findByUserId(UUID userId);
 
     List<NotificationEntity> findByUserId(UUID userId, Pageable pageable);
+
+    List<NotificationEntity> findBySenderId(UUID senderId);
+
+    boolean existsByUserIdAndSenderId(UUID userId, UUID senderId);
+
+    void deleteByUserIdAndSenderId(UUID userId, UUID senderId);
 }

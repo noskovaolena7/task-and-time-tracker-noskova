@@ -4,6 +4,7 @@ package com.olenanoskova.task_and_time_tracker.controller;
 import com.olenanoskova.task_and_time_tracker.controller.dto.UserCompanyRoleCreateRequestDto;
 import com.olenanoskova.task_and_time_tracker.controller.dto.UserCompanyRoleResponseDto;
 import com.olenanoskova.task_and_time_tracker.mapper.UserCompanyRoleMapper;
+import com.olenanoskova.task_and_time_tracker.security.SecurityService;
 import com.olenanoskova.task_and_time_tracker.service.UserCompanyRoleService;
 import com.olenanoskova.task_and_time_tracker.service.model.UserCompanyRole;
 import jakarta.validation.Valid;
@@ -23,9 +24,10 @@ public class CompanyRoleController {
 
     private final UserCompanyRoleService roleService;
     private final UserCompanyRoleMapper roleMapper;
+    private final SecurityService securityService;
 
     @GetMapping
-    @PreAuthorize("@securityService.canAccessCompany(#companyId)")
+    @PreAuthorize("@securityService.canViewRoles(#companyId)")
     public ResponseEntity<List<UserCompanyRoleResponseDto>> getRoles(@PathVariable UUID companyId) {
         List<UserCompanyRole> roles = roleService.getRoles(companyId);
         List<UserCompanyRoleResponseDto> responseList = roles.stream()
@@ -42,6 +44,7 @@ public class CompanyRoleController {
             @Valid @RequestBody UserCompanyRoleCreateRequestDto request) {
 
         UserCompanyRole role = roleMapper.toDomain(request);
+        role.setInvitedBy(securityService.getCurrentUserId());
         UserCompanyRole createdRole = roleService.assignRole(companyId, role);
         UserCompanyRoleResponseDto response = roleMapper.toDto(createdRole);
 

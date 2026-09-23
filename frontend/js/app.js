@@ -16,6 +16,13 @@ function toast(msg, type = "") {
 const fmtDate = (iso) => (iso ? new Date(iso).toLocaleString(locale()) : "—");
 const shortId = (id) => (id ? String(id).slice(0, 8) : "—");
 
+/** Accepts a bare code or a full invite link (…/#/join/CODE) and returns the code. */
+function parseInviteCode(input) {
+  const v = String(input || "").trim();
+  const m = v.match(/join\/([^/?#]+)/);
+  return m ? decodeURIComponent(m[1]) : v;
+}
+
 async function withErr(fn, okMsg) {
   try {
     const r = await fn();
@@ -28,6 +35,35 @@ async function withErr(fn, okMsg) {
 }
 
 const S = { me: null, companies: [], sort: { key: "created_at", dir: "desc" } };
+
+const Theme = {
+  KEY: "ttt_theme",
+  get() { return localStorage.getItem(this.KEY) || "dark"; },
+  apply() {
+    const dark = this.get() !== "light";
+    document.documentElement.dataset.theme = dark ? "" : "light";
+    $$(".theme-toggle").forEach((b) => { b.textContent = dark ? "🌙" : "☀️"; });
+  },
+  toggle() {
+    localStorage.setItem(this.KEY, this.get() === "light" ? "dark" : "light");
+    this.apply();
+  },
+};
+
+const COUNTRIES = [
+  ["380", "🇺🇦 Ukraine"], ["49", "🇩🇪 Deutschland"], ["48", "🇵🇱 Polska"],
+  ["1", "🇺🇸 USA/CA"], ["44", "🇬🇧 UK"], ["33", "🇫🇷 France"], ["34", "🇪🇸 España"],
+  ["39", "🇮🇹 Italia"], ["31", "🇳🇱 Nederland"], ["32", "🇧🇪 België"], ["43", "🇦🇹 Österreich"],
+  ["41", "🇨🇭 Schweiz"], ["420", "🇨🇿 Česko"], ["421", "🇸🇰 Slovensko"], ["36", "🇭🇺 Hungary"],
+  ["40", "🇷🇴 România"], ["359", "🇧🇬 Bulgaria"], ["30", "🇬🇷 Greece"], ["90", "🇹🇷 Türkiye"],
+  ["972", "🇮🇱 Israel"], ["971", "🇦🇪 UAE"], ["91", "🇮🇳 India"], ["86", "🇨🇳 China"],
+  ["81", "🇯🇵 Japan"], ["55", "🇧🇷 Brasil"], ["61", "🇦🇺 Australia"],
+];
+
+function phoneRow() {
+  const opts = COUNTRIES.map(([c, n]) => `<option value="${c}"${c === "380" ? " selected" : ""}>+${c} ${n}</option>`).join("");
+  return `<div class="phone-row"><select id="phone-cc">${opts}</select><input name="phone_number" type="tel" required placeholder="501234567" /></div>`;
+}
 
 function applyStaticI18n() {
   document.documentElement.lang = Lang.get();
@@ -96,18 +132,25 @@ const AUTH_TABS = {
       const { invite_code, ...user } = v;
       const r = await Api.auth.signupPersonal(user);
       Api.setToken(r.token);
-      const j = await Api.invites.accept(invite_code);
+      const j = await Api.invites.accept(parseInviteCode(invite_code));
       toast(t("auth.joined"), "ok");
       return j;
     },
   },
 };
 let authTab = "login";
+const OPTIONAL_FIELDS = ["company_description"];
 function renderAuthForm() {
   const tab = AUTH_TABS[authTab];
   $("#auth-hint").textContent = t(tab.hintKey);
   $("#auth-form").innerHTML =
-    tab.fields.map(([n, lKey, ty]) => `<label>${esc(t(lKey))}<input name="${n}" type="${ty}" required /></label>`).join("") +
+    tab.fields.map(([n, lKey, ty]) => {
+      const optional = OPTIONAL_FIELDS.includes(n);
+      if (n === "phone_number") {
+        return `<label>${esc(t(lKey))}${optional ? "" : ' <span class="req">*</span>'}${phoneRow()}</label>`;
+      }
+      return `<label>${esc(t(lKey))}${optional ? "" : ' <span class="req">*</span>'}<input name="${n}" type="${ty}"${optional ? "" : " required"} /></label>`;
+    }).join("") +
     `<label>${esc(t("f.backend"))}<input name="__base" value="${esc(Api.getBase())}" /></label>
      <button class="btn" type="submit">${esc(t(tab.submitKey))}</button>`;
 }
@@ -122,6 +165,11 @@ function initAuth() {
     e.preventDefault();
     const fd = new FormData(e.target);
     Api.setBase(fd.get("__base") || "http://localhost:8080");
+    const cc = $("#phone-cc");
+    if (cc) {
+      const digits = String(fd.get("phone_number") || "").replace(/\D/g, "").replace(/^0+/, "");
+      fd.set("phone_number", "+" + cc.value + digits);
+    }
     const v = {};
     fd.forEach((val, k) => { if (k !== "__base" && val !== "") v[k] = val; });
     const r = await withErr(() => AUTH_TABS[authTab].run(v));
@@ -256,12 +304,21 @@ async function viewDashboard() {
     <div><span class="tag">${p.company_id ? "company: " + esc(cname(p.company_id)) : esc(t("tag.personal"))}</span>
     <span class="tag">${fmtDate(p.created_at)}</span></div></div>`;
   let html = "";
-  if (upcoming && ((upcoming.deadlines || []).length || (upcoming.reminders || []).length)) {
+  const compOf = {};
+  projects.forEach((p) => { compOf[p.id] = p.company_id; });
+  const inScope = (pid) => {
+    if (dashTab === "personal") return !compOf[pid];
+    if (dashTab === "companies") return !!compOf[pid];
+    return true;
+  };
+  const dl = (upcoming.deadlines || []).filter((d) => inScope(d.project_id));
+  const rm = (upcoming.reminders || []).filter((r) => inScope(r.project_id));
+  if (upcoming && (dl.length || rm.length)) {
     const item = (over, main, sub, link) =>
       `<li>${over ? `<span class="tag red">${esc(t("upcoming.overdue"))}</span> ` : ""}<a href="${link}">${esc(main)}</a> <span class="tag">${esc(sub)}</span></li>`;
     html += `<h3>${esc(t("upcoming.title"))}</h3><ul class="clean">` +
-      (upcoming.deadlines || []).map((d) => item(d.overdue, d.title || d.project_name, `${d.project_name} — ${fmtDate(d.deadline)}`, `#/projects/${d.project_id}`)).join("") +
-      (upcoming.reminders || []).map((r) => item(r.overdue, r.message || r.task_title, `${r.task_title} — ${fmtDate(r.remind_at)}`, `#/tasks/${r.task_id}`)).join("") +
+      dl.map((d) => item(d.overdue, d.title || d.project_name, `${d.project_name} — ${fmtDate(d.deadline)}`, `#/projects/${d.project_id}`)).join("") +
+      rm.map((r) => item(r.overdue, r.message || r.task_title, `${r.task_title} — ${fmtDate(r.remind_at)}`, `#/tasks/${r.task_id}`)).join("") +
       `</ul>`;
   } else {
     html += `<h3>${esc(t("upcoming.title"))}</h3><p class="muted">${esc(t("upcoming.empty"))}</p>`;
@@ -272,6 +329,11 @@ async function viewDashboard() {
     html += personal.length
       ? `<div class="grid">${sortBy(personal, S.sort.key === "title" ? "name" : S.sort.key, S.sort.dir).map(projCard).join("")}</div>`
       : `<p class="muted">${esc(t("dash.empty_personal"))} <a href="#/projects">${esc(t("dash.create_project"))}</a></p>`;
+    html += `<div class="detail"><h3>${esc(t("profile.title"))}</h3>
+      <label>${esc(t("f.first"))}<input id="pf2-first" value="${esc(S.me.first_name || "")}" /></label>
+      <label>${esc(t("f.last"))}<input id="pf2-last" value="${esc(S.me.last_name || "")}" /></label>
+      <label>${esc(t("f.phone"))}<input id="pf2-phone" value="${esc(S.me.phone_number || "")}" /></label>
+      <button class="btn" id="pf2-save">${esc(t("common.save"))}</button></div>`;
     html += `<div class="detail"><h3>${esc(t("account.title"))}</h3>
       <p class="muted">${esc(t("account.hint"))}</p>
       <button class="btn small danger" id="acc-del">${esc(t("account.delete"))}</button></div>`;
@@ -284,6 +346,17 @@ async function viewDashboard() {
       : `<p class="muted">${esc(t("dash.no_company_projects"))}</p>`;
   }
   $("#dash-body").innerHTML = html;
+  const pf2save = $("#pf2-save");
+  if (pf2save) pf2save.onclick = async () => {
+    const r = await withErr(() => Api.users.update(S.me.id, {
+      first_name: $("#pf2-first").value, last_name: $("#pf2-last").value, phone_number: $("#pf2-phone").value,
+    }), t("common.saved"));
+    if (r) {
+      S.me = await Api.users.get(S.me.id).catch(() => S.me);
+      $("#me-box").innerHTML = `${esc(S.me.first_name)} ${esc(S.me.last_name)}<br>${esc(S.me.email)}`;
+      viewDashboard();
+    }
+  };
   if (!hasCompany()) {
     $("#dash-body").insertAdjacentHTML("beforeend",
       `<div class="detail"><h3>${esc(t("team.join"))}</h3>
@@ -291,7 +364,7 @@ async function viewDashboard() {
       <div class="toolbar"><input id="dash-acc-code" placeholder="${esc(t("team.accept_ph"))}" style="width:300px" />
       <button class="btn small" id="dash-acc-btn">${esc(t("team.join"))}</button></div></div>`);
     $("#dash-acc-btn").onclick = async () => {
-      const r = await withErr(() => Api.invites.accept($("#dash-acc-code").value), t("team.joined"));
+      const r = await withErr(() => Api.invites.accept(parseInviteCode($("#dash-acc-code").value)), t("team.joined"));
       if (r) {
         S.companies = await Api.companies.list().catch(() => []);
         updateNavVisibility();
@@ -520,11 +593,13 @@ async function viewCompanyDetail(cid) {
   const m = $("#main");
   const c = await withErr(() => Api.companies.get(cid));
   if (!c) { m.innerHTML = `<p>${esc(t("comp.no_access"))}</p>`; return; }
-  const [roles, projects] = await Promise.all([
-    Api.companies.roles(cid).catch(() => []),
+  const [projects, members] = await Promise.all([
     Api.projects.list({ company_id: cid }).catch(() => []),
+    Api.companies.members(cid).catch(() => []),
   ]);
-  const myRole = (roles.find((r) => r.user_id === S.me.id) || {}).role;
+  const roles = [];
+  const myRole = (members.find((x) => x.user_id === S.me.id) || {}).role;
+  const canManage = myRole === "OWNER" || myRole === "ADMIN";
   m.innerHTML = `<h2>${esc(c.name)}</h2>
     <div><span class="tag">${esc(t("comp.your_role"))}: ${esc(myRole || "—")}</span> <span class="tag">${esc(t("comp.owner"))}: ${shortId(c.owner_id)}</span></div>
     <p>${esc(c.description || "")}</p>
@@ -534,18 +609,17 @@ async function viewCompanyDetail(cid) {
     <div class="detail"><h3>${esc(t("comp.projects"))}</h3>
       <ul class="clean">${projects.map((p) => `<li><a href="#/projects/${p.id}">${esc(p.name)}</a></li>`).join("")}</ul></div>
     <div class="detail"><h3>${esc(t("comp.team"))}</h3>
-      <table><tr><th>${esc(t("comp.user"))}</th><th>${esc(t("comp.role"))}</th><th></th></tr>
-      ${roles.map((r) => `<tr><td>${shortId(r.user_id)}${r.user_id === S.me.id ? " " + esc(t("team.you")) : ""}</td><td>${esc(r.role)}</td>
-        <td><select data-role-sel="${r.id}">${["USER", "MANAGER", "ADMIN", "OWNER"].map((o) => `<option ${o === r.role ? "selected" : ""}>${o}</option>`).join("")}</select>
-        <button class="btn small" data-role-save="${r.id}" data-role-user="${r.user_id}">${esc(t("comp.change"))}</button>
-        <button class="ghost" data-role-del="${r.id}">${esc(t("comp.remove"))}</button></td></tr>`).join("")}</table>
-      <div class="toolbar"><input id="ra-user" placeholder="${esc(t("comp.new_member_ph"))}" style="width:300px" />
-      <select id="ra-role"><option>USER</option><option>MANAGER</option><option>ADMIN</option><option>OWNER</option></select>
+      <div class="toolbar"><input id="mem-search" placeholder="${esc(t("team.search_ph"))}" style="flex:1" />
+      <select id="mem-role"><option value="">${esc(t("team.all_roles"))}</option><option>USER</option><option>MANAGER</option><option>ADMIN</option><option>OWNER</option></select></div>
+      <table><tr><th>${esc(t("team.name"))}</th><th>${esc(t("comp.role"))}</th><th></th></tr>
+      <tbody id="mem-rows"></tbody></table>
+      ${canManage ? `<div class="toolbar"><input id="ra-user" placeholder="${esc(t("comp.new_member_ph"))}" style="width:300px" />
+      <select id="ra-role">${(myRole === "ADMIN" ? ["USER", "MANAGER"] : ["USER", "MANAGER", "ADMIN", "OWNER"]).map((o) => `<option>${o}</option>`).join("")}</select>
       <button class="btn small" id="ra-btn">${esc(t("comp.assign"))}</button></div>
-      <p class="muted">${esc(t("comp.roles_hint"))}</p></div>
-    <div class="detail"><h3>${esc(t("comp.invites"))}</h3>
+      <p class="muted">${esc(t("comp.roles_hint"))}</p>` : ""}</div>
+    ${canManage ? `<div class="detail"><h3>${esc(t("comp.invites"))}</h3>
       <div class="toolbar"><button class="btn small" id="inv-btn">${esc(t("comp.make_invite"))}</button><span id="inv-code" class="tag"></span></div>
-      <p class="muted">${esc(t("comp.invite_hint"))}</p></div>`;
+      <p class="muted">${esc(t("comp.invite_hint"))}</p></div>` : ""}`;
   $("#ce-save").onclick = async () => {
     const r = await withErr(() => Api.companies.update(cid, { name: $("#ce-name").value, description: $("#ce-desc").value }), t("common.saved"));
     if (r) viewCompanyDetail(cid);
@@ -555,21 +629,49 @@ async function viewCompanyDetail(cid) {
     const r = await withErr(() => Api.companies.remove(cid), t("common.deleted"));
     if (r !== null) location.hash = "#/companies";
   };
-  $("#ra-btn").onclick = async () => {
+  const raBtn = $("#ra-btn");
+  if (raBtn) raBtn.onclick = async () => {
     const r = await withErr(() => Api.companies.assignRole(cid, { user_id: $("#ra-user").value, role: $("#ra-role").value }), t("comp.assigned"));
     if (r) viewCompanyDetail(cid);
   };
-  $$("[data-role-save]").forEach((b) => (b.onclick = async () => {
-    const sel = document.querySelector(`[data-role-sel="${b.dataset.roleSave}"]`);
-    const r = await withErr(() => Api.companies.updateRole(cid, b.dataset.roleSave, { user_id: b.dataset.roleUser, role: sel.value }), t("comp.role_changed"));
-    if (r) viewCompanyDetail(cid);
-  }));
-  $$("[data-role-del]").forEach((b) => (b.onclick = async () => {
-    if (!confirm(t("comp.remove_confirm"))) return;
-    const r = await withErr(() => Api.companies.removeRole(cid, b.dataset.roleDel), t("comp.removed"));
-    if (r !== null) { S.companies = await Api.companies.list().catch(() => S.companies); updateNavVisibility(); viewCompanyDetail(cid); }
-  }));
-  $("#inv-btn").onclick = async () => {
+  const renderMembers = () => {
+    const q = ($("#mem-search").value || "").toLowerCase();
+    const rf = $("#mem-role").value;
+    const rows = members.filter((x) => {
+      const hay = `${x.first_name || ""} ${x.last_name || ""} ${x.email || ""}`.toLowerCase();
+      return (!q || hay.includes(q)) && (!rf || x.role === rf);
+    });
+    $("#mem-rows").innerHTML = rows.map((x) => {
+      const who = `${esc(x.first_name || "")} ${esc(x.last_name || "")}`.trim() || shortId(x.user_id);
+      const rowEditable = canManage && (myRole === "OWNER" || x.role === "USER" || x.role === "MANAGER");
+      const roleOpts = (myRole === "ADMIN" ? ["USER", "MANAGER"] : ["USER", "MANAGER", "ADMIN", "OWNER"])
+        .map((o) => `<option ${o === x.role ? "selected" : ""}>${o}</option>`).join("");
+      const ctl = rowEditable
+        ? `<td><select data-role-sel="${x.id}">${roleOpts}</select>
+        <button class="btn small" data-role-save="${x.id}" data-role-user="${x.user_id}">${esc(t("comp.change"))}</button>
+        <button class="ghost" data-role-del="${x.id}">${esc(t("comp.remove"))}</button></td>`
+        : `<td></td>`;
+      return `<tr><td>${who}${x.user_id === S.me.id ? " " + esc(t("team.you")) : ""}<br><span class="muted">${esc(x.email || "")}</span></td><td>${esc(x.role)}</td>${ctl}</tr>`;
+    }).join("");
+    bindMemberButtons();
+  };
+  const bindMemberButtons = () => {
+    $$("[data-role-save]").forEach((b) => (b.onclick = async () => {
+      const sel = document.querySelector(`[data-role-sel="${b.dataset.roleSave}"]`);
+      const r = await withErr(() => Api.companies.updateRole(cid, b.dataset.roleSave, { user_id: b.dataset.roleUser, role: sel.value }), t("comp.role_changed"));
+      if (r) viewCompanyDetail(cid);
+    }));
+    $$("[data-role-del]").forEach((b) => (b.onclick = async () => {
+      if (!confirm(t("comp.remove_confirm"))) return;
+      const r = await withErr(() => Api.companies.removeRole(cid, b.dataset.roleDel), t("comp.removed"));
+      if (r !== null) { S.companies = await Api.companies.list().catch(() => S.companies); updateNavVisibility(); viewCompanyDetail(cid); }
+    }));
+  };
+  $("#mem-search").addEventListener("input", renderMembers);
+  $("#mem-role").addEventListener("change", renderMembers);
+  renderMembers();
+  const invBtn = $("#inv-btn");
+  if (invBtn) invBtn.onclick = async () => {
     const r = await withErr(() => Api.invites.create({ company_id: cid }), t("comp.invite_done"));
     if (r) {
       const link = `${location.origin}/#/join/${encodeURIComponent(r.code)}`;
@@ -590,33 +692,130 @@ async function viewTeam() {
     <div class="toolbar"><input id="acc-code" placeholder="${esc(t("team.accept_ph"))}" style="width:300px" /><button class="btn small" id="acc-btn">${esc(t("team.join"))}</button></div>
     <div id="team-body"><p class="muted">${esc(t("common.loading"))}</p></div>`;
   $("#acc-btn").onclick = async () => {
-    const r = await withErr(() => Api.invites.accept($("#acc-code").value), t("team.joined"));
+    const r = await withErr(() => Api.invites.accept(parseInviteCode($("#acc-code").value)), t("team.joined"));
     if (r) { S.companies = await Api.companies.list().catch(() => []); updateNavVisibility(); viewTeam(); }
   };
   const companies = S.companies.length ? S.companies : await Api.companies.list().catch(() => []);
   S.companies = companies;
   let html = "";
   for (const c of companies) {
-    const roles = await Api.companies.roles(c.id).catch(() => []);
+    const members = await Api.companies.members(c.id).catch(() => []);
     html += `<div class="detail"><h3><a href="#/companies/${c.id}">${esc(c.name)}</a></h3>
-      <table><tr><th>${esc(t("comp.user"))}</th><th>${esc(t("comp.role"))}</th></tr>
-      ${roles.map((r) => `<tr><td>${shortId(r.user_id)}${r.user_id === S.me.id ? " " + esc(t("team.you")) : ""}</td><td>${esc(r.role)}</td></tr>`).join("")}</table></div>`;
+      <table><tr><th>${esc(t("team.name"))}</th><th>Email</th><th>${esc(t("comp.role"))}</th></tr>
+      ${members.map((x) => {
+        const who = `${esc(x.first_name || "")} ${esc(x.last_name || "")}`.trim() || shortId(x.user_id);
+        return `<tr><td>${who}${x.user_id === S.me.id ? " " + esc(t("team.you")) : ""}</td><td>${esc(x.email || "")}</td><td>${esc(x.role)}</td></tr>`;
+      }).join("")}</table></div>`;
   }
   $("#team-body").innerHTML = html || `<p class="muted">${esc(t("team.empty"))}</p>`;
 }
 
 /* ---------- notifications ---------- */
+let notifTab = "inbox"; // inbox | sent
 async function viewNotifications() {
   const m = $("#main");
-  const list = (await withErr(() => Api.users.notifications(S.me.id, 0, 100))) || [];
+  const [list, sent] = await Promise.all([
+    withErr(() => Api.users.notifications(S.me.id, 0, 100)),
+    Api.users.sent(S.me.id).catch(() => []),
+  ]);
+  const inbox = list || [], outbox = sent || [];
+  const row = (n, isOut) => {
+    const counterpart = isOut ? n.user_id : n.sender_id;
+    const who = isOut
+      ? `${esc(n.sender_name ? "" : "")}`
+      : (n.sender_name ? `<b>${esc(n.sender_name)}</b>: ` : "");
+    const toWhom = isOut ? `<span class="tag">→ ${esc(n.to_name || "")}</span>` : "";
+    return `<li>${n.is_read || isOut ? "" : "<b>● </b>"}${who}${esc(n.message || n.type || "")}
+    <span class="tag">${fmtDate(n.created_at)}</span> ${toWhom}
+    ${n.sender_id && !isOut ? `<button class="btn small" data-reply="${n.sender_id}" data-reply-name="${esc(n.sender_name || "")}">${esc(t("notif.reply"))}</button>` : ""}
+    ${!n.is_read && !isOut ? `<button class="btn small" data-read="${n.id}">${esc(t("notif.read"))}</button>` : ""}
+    <button class="ghost" data-del-msg="${n.id}">${esc(t("notif.del_msg"))}</button>
+    ${counterpart ? `<button class="ghost" data-del-conv="${counterpart}">${esc(t("notif.del_conv"))}</button>` : ""}</li>`;
+  };
   m.innerHTML = `<h2>${esc(t("notif.title"))}</h2>
-    <ul class="clean">${list.map((n) => `<li>${n.is_read ? "" : "<b>● </b>"}${esc(n.message || n.type || "")}
-    <span class="tag">${fmtDate(n.created_at)}</span>
-    ${n.is_read ? "" : `<button class="btn small" data-read="${n.id}">${esc(t("notif.read"))}</button>`}</li>`).join("") || `<li>${esc(t("notif.empty"))}</li>`}</ul>`;
-  $$("[data-read]").forEach((b) => (b.onclick = async () => {
-    const r = await withErr(() => Api.users.markRead(S.me.id, b.dataset.read), t("notif.marked"));
-    if (r) { viewNotifications(); refreshNotifBadge(); }
-  }));
+    <div class="tabs">
+      <button class="tab" data-nt="inbox">${esc(t("notif.inbox"))} (${inbox.filter((n) => !n.is_read).length})</button>
+      <button class="tab" data-nt="sent">${esc(t("notif.sent_tab"))} (${outbox.length})</button>
+    </div>
+    <div class="detail"><h3>${esc(t("notif.compose"))}</h3>
+      <div class="toolbar"><input id="nm-to" placeholder="${esc(t("notif.to_ph"))}" style="width:300px" />
+      <input id="nm-text" placeholder="${esc(t("notif.message_ph"))}" style="flex:1" />
+      <button class="btn small" id="nm-send">${esc(t("notif.send"))}</button></div></div>
+    <ul class="clean" id="notif-list"></ul>`;
+  const renderTab = () => {
+    $$("#main .tab").forEach((b) => b.classList.toggle("active", b.dataset.nt === notifTab));
+    $("#notif-list").innerHTML =
+      (notifTab === "inbox" ? inbox.map((n) => row(n, false)) : outbox.map((n) => row(n, true))).join("")
+      || `<li>${esc(t("notif.empty"))}</li>`;
+    bindNotifButtons();
+  };
+  const bindNotifButtons = () => {
+    $$("[data-reply]").forEach((b) => (b.onclick = () => {
+      const toField = $("#nm-to");
+      toField.value = b.dataset.replyName || "";
+      toField.dataset.uid = b.dataset.reply;
+      toField.focus();
+      toast(t("notif.reply_hint"));
+    }));
+    $$("[data-read]").forEach((b) => (b.onclick = async () => {
+      const r = await withErr(() => Api.users.markRead(S.me.id, b.dataset.read), t("notif.marked"));
+      if (r) { viewNotifications(); refreshNotifBadge(); }
+    }));
+    $$("[data-del-msg]").forEach((b) => (b.onclick = async () => {
+      if (!confirm(t("notif.del_confirm"))) return;
+      const r = await withErr(() => Api.users.deleteMessage(S.me.id, b.dataset.delMsg), t("notif.deleted"));
+      if (r !== null) viewNotifications();
+    }));
+    $$("[data-del-conv]").forEach((b) => (b.onclick = async () => {
+      if (!confirm(t("notif.del_conv_confirm"))) return;
+      const r = await withErr(() => Api.users.deleteConversation(S.me.id, b.dataset.delConv), t("notif.deleted"));
+      if (r !== null) viewNotifications();
+    }));
+  };
+  $$("#main .tab").forEach((b) => (b.onclick = () => { notifTab = b.dataset.nt; renderTab(); }));
+  renderTab();
+  const recipients = [];
+  const seen = new Set([S.me.id]);
+  for (const c of S.companies) {
+    const members = await Api.companies.members(c.id).catch(() => []);
+    for (const x of members) {
+      if (!seen.has(x.user_id)) {
+        seen.add(x.user_id);
+        const who = `${x.first_name || ""} ${x.last_name || ""}`.trim() || x.email || shortId(x.user_id);
+        recipients.push({ id: x.user_id, email: x.email || "", label: `${who} — ${c.name}` });
+      }
+    }
+  }
+  const toFieldInit = $("#nm-to");
+  if (toFieldInit) toFieldInit.addEventListener("input", () => { delete toFieldInit.dataset.uid; });
+  const sendBtn = $("#nm-send");
+  if (sendBtn) sendBtn.onclick = async () => {
+    const toField = $("#nm-to");
+    if (toField.dataset.uid) {
+      const r = await withErr(() => Api.users.sendMessage(toField.dataset.uid, { message: $("#nm-text").value }), t("notif.sent"));
+      if (r) viewNotifications();
+      return;
+    }
+    const typed = (toField.value || "").trim().toLowerCase();
+    const matches = recipients.filter((r) =>
+      r.label.toLowerCase().includes(typed) || (r.email || "").toLowerCase() === typed);
+    const exact = recipients.find((r) => (r.email || "").toLowerCase() === typed);
+    const target = exact || (matches.length === 1 ? matches[0] : null);
+    if (!typed) { toast(t("notif.type_recipient")); return; }
+    if (!target) {
+      if (matches.length > 1) {
+        const options = matches.map((x) => x.email || shortId(x.id)).join(", ");
+        toast(`${t("notif.ambiguous")}: ${options}`, "error");
+      } else {
+        const r = await withErr(() => Api.users.sendMessageByEmail(typed, { message: $("#nm-text").value }), t("notif.sent"));
+        if (r) viewNotifications();
+        return;
+      }
+      return;
+    }
+    const r = await withErr(() => Api.users.sendMessage(target.id, { message: $("#nm-text").value }), t("notif.sent"));
+    if (r) viewNotifications();
+  };
   refreshNotifBadge();
 }
 
@@ -656,6 +855,8 @@ $$("#nav button").forEach((b) => {
   });
 });
 $$(".lang-sel").forEach((sel) => sel.addEventListener("change", onLangChange));
+$$(".theme-toggle").forEach((b) => b.addEventListener("click", () => Theme.toggle()));
+Theme.apply();
 checkPendingJoin();
 initAuth();
 if (Api.token()) enterApp();

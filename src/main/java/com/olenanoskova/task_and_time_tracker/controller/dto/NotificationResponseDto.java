@@ -15,6 +15,13 @@ public class NotificationResponseDto {
     @NotNull(message = "User ID cannot be null")
     private UUID userId;
 
+    // sender of a team message; null for system notifications
+    private UUID senderId;
+
+    private String senderName;
+
+    private String senderEmail;
+
     // projectId may be null if the notification is not linked to a project
     private UUID projectId;
 

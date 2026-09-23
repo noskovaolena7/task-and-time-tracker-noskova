@@ -25,6 +25,9 @@ public class UserCompanyRoleEntity {
     @Enumerated(EnumType.STRING)
     private MemberRoleEntity role;
 
+    @Column(name = "invited_by")
+    private UUID invitedBy;
+
     @Column(name = "created_at")
     private Instant createdAt;
 

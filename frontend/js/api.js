@@ -60,6 +60,7 @@ const Api = (() => {
       update: (id, b) => put(`/companies/${id}`, b),
       remove: (id) => del(`/companies/${id}`),
       roles: (cid) => get(`/companies/${cid}/roles`),
+      members: (cid) => get(`/companies/${cid}/members`),
       assignRole: (cid, b) => post(`/companies/${cid}/roles`, b),
       updateRole: (cid, rid, b) => put(`/companies/${cid}/roles/${rid}`, b),
       removeRole: (cid, rid) => del(`/companies/${cid}/roles/${rid}`),
@@ -69,6 +70,11 @@ const Api = (() => {
       get: (id) => get(`/users/${id}`),
       update: (id, b) => put(`/users/${id}`, b),
       remove: (id) => del(`/users/${id}`),
+      sendMessage: (uid, b) => post(`/users/${uid}/notifications`, b),
+      sendMessageByEmail: (email, b) => post(`/users/messages`, { ...b, email }),
+      sent: (uid) => get(`/users/${uid}/messages/sent`),
+      deleteMessage: (uid, nid) => del(`/users/${uid}/notifications/${nid}`),
+      deleteConversation: (uid, other) => del(`/users/${uid}/conversations/${other}`),
       upcoming: (uid, days = 7, size = 20) =>
         get(`/users/${uid}/upcoming?days=${days}&size=${size}`),
       notifications: (uid, page, size) => {

@@ -35,6 +35,7 @@ class InviteServiceTest {
     @Test
     void generateInvite_success() {
         UUID companyId = UUID.randomUUID();
+        UUID creatorId = UUID.randomUUID();
         InviteEntity saved = new InviteEntity();
         saved.setId(UUID.randomUUID());
         saved.setCompanyId(companyId);
@@ -42,7 +43,7 @@ class InviteServiceTest {
 
         when(inviteRepository.save(any(InviteEntity.class))).thenReturn(saved);
 
-        InviteEntity result = inviteService.generateInvite(companyId);
+        InviteEntity result = inviteService.generateInvite(companyId, creatorId);
         assertNotNull(result);
         assertEquals(companyId, result.getCompanyId());
     }

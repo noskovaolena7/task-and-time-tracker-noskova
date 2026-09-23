@@ -41,6 +41,9 @@ class CompanyRoleControllerTest {
     @Mock
     private UserCompanyRoleMapper roleMapper;
 
+    @Mock
+    private com.olenanoskova.task_and_time_tracker.security.SecurityService securityService;
+
     @InjectMocks
     private CompanyRoleController controller;
 

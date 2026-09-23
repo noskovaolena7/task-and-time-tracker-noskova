@@ -166,4 +166,39 @@ public class NotificationServiceImpl implements NotificationService {
 
         log.info("Successfully deleted notification {}", id);
     }
+
+    @Override
+    public List<Notification> getSentMessages(UUID userId) {
+
+        log.info("Fetching sent messages for user {}", userId);
+
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(userId);
+        }
+
+        return notificationRepository.findBySenderId(userId).stream()
+                .map(notificationMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public void deleteUserNotification(UUID userId, UUID notificationId) {
+
+        NotificationEntity entity = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new NotificationNotFoundException(notificationId));
+
+        if (!userId.equals(entity.getUserId()) && !userId.equals(entity.getSenderId())) {
+            throw new NotificationNotFoundException(notificationId);
+        }
+
+        notificationRepository.deleteById(notificationId);
+    }
+
+    @Override
+    @org.springframework.transaction.annotation.Transactional
+    public void deleteConversation(UUID userId, UUID otherUserId) {
+
+        notificationRepository.deleteByUserIdAndSenderId(userId, otherUserId);
+        notificationRepository.deleteByUserIdAndSenderId(otherUserId, userId);
+    }
 }

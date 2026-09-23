@@ -113,4 +113,20 @@ databaseChangeLog:
             path: 015-creators-set-null.sql
             relativeToChangelogFile: true
 
+  - changeSet:
+      id: 017-invited-by
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 017-invited-by.sql
+            relativeToChangelogFile: true
+
+  - changeSet:
+      id: 018-notification-sender
+      author: Olena
+      changes:
+        - sqlFile:
+            path: 018-notification-sender.sql
+            relativeToChangelogFile: true
+
 

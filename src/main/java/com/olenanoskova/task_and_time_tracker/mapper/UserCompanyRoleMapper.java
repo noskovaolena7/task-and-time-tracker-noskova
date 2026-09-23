@@ -48,6 +48,7 @@ public class UserCompanyRoleMapper {
         entity.setUserId(role.getUserId());
         entity.setCompanyId(role.getCompanyId());
         entity.setRole(MemberRoleEntity.valueOf(role.getRole().name()));
+        entity.setInvitedBy(role.getInvitedBy());
         entity.setCreatedAt(role.getCreatedAt());
         entity.setUpdatedAt(role.getUpdatedAt());
         return entity;
@@ -60,6 +61,7 @@ public class UserCompanyRoleMapper {
         role.setUserId(entity.getUserId());
         role.setCompanyId(entity.getCompanyId());
         role.setRole(MemberRole.valueOf(entity.getRole().name()));
+        role.setInvitedBy(entity.getInvitedBy());
         role.setCreatedAt(entity.getCreatedAt());
         role.setUpdatedAt(entity.getUpdatedAt());
         return role;

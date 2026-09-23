@@ -16,4 +16,18 @@ public interface UserCompanyRoleService {
     UserCompanyRole updateRole(UUID id, UserCompanyRole role);
 
     void deleteRole(UUID id);
+
+    /**
+     * Company members with user details (name/email) for display, search
+     * and role filtering. One call instead of N user lookups.
+     */
+    List<com.olenanoskova.task_and_time_tracker.controller.dto.CompanyMemberDto> getMembers(UUID companyId);
+
+    /**
+     * Members visible to the requester: OWNER/ADMIN see everyone; MANAGER and
+     * USER see only themselves, their inviter and coworkers sharing a project
+     * in this company. Nobody sees the whole roster by default.
+     */
+    List<com.olenanoskova.task_and_time_tracker.controller.dto.CompanyMemberDto> getVisibleMembers(
+            UUID companyId, UUID requesterId);
 }
