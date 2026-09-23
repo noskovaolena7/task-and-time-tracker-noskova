@@ -6,6 +6,7 @@ COPY .mvn ./.mvn
 COPY mvnw mvnw.cmd ./
 RUN chmod +x mvnw && ./mvnw -q dependency:go-offline
 COPY src ./src
+COPY frontend ./frontend
 RUN ./mvnw -q -DskipTests package
 
 # ---------- run ----------
