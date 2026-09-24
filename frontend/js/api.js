@@ -68,6 +68,7 @@ const Api = (() => {
     users: {
       list: () => get("/users"),
       get: (id) => get(`/users/${id}`),
+      byEmail: (email) => get(`/users/by-email?email=${encodeURIComponent(email)}`),
       update: (id, b) => put(`/users/${id}`, b),
       remove: (id) => del(`/users/${id}`),
       sendMessage: (uid, b) => post(`/users/${uid}/notifications`, b),
