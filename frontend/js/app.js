@@ -390,9 +390,17 @@ async function viewProfile() {
       <label>Email<input value="${esc(S.me.email || "")}" disabled /></label>
       <button class="btn" id="pf-save">${esc(t("common.save"))}</button>
     </div>
+    <div class="detail"><h3>${esc(hasCompany() ? t("dash.pws") : t("dash.cws"))}</h3>
+    <div class="toolbar"><button class="btn small" id="pf-ws-toggle">${esc((hasCompany() ? personalVisible() : companiesVisible()) ? t("profile.pers_off") : t("profile.pers_on"))}</button></div></div>
     <div class="detail"><h3>${esc(t("account.title"))}</h3>
       <p class="muted">${esc(t("account.hint"))}</p>
       <button class="btn small danger" id="acc-del">${esc(t("account.delete"))}</button></div>`;
+  const wsToggle = $("#pf-ws-toggle");
+  if (wsToggle) wsToggle.onclick = () => {
+    if (hasCompany()) setPersonalVisible(!personalVisible());
+    else setCompaniesVisible(!companiesVisible());
+    viewProfile();
+  };
   $("#pf-save").onclick = async () => {    const r = await withErr(() => Api.users.update(S.me.id, {
       first_name: $("#pf-first").value, last_name: $("#pf-last").value, phone_number: $("#pf-phone").value,
     }), t("common.saved"));
