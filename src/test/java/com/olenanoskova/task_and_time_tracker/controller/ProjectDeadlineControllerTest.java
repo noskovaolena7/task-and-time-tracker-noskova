@@ -26,7 +26,9 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -131,5 +133,16 @@ class ProjectDeadlineControllerTest {
                         .content(om.writeValueAsString(req)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(deadlineId.toString()));
+    }
+
+    @Test
+    void deleteDeadline_returns204() throws Exception {
+        UUID projectId = UUID.randomUUID();
+        UUID deadlineId = UUID.randomUUID();
+
+        mvc.perform(delete("/projects/{projectId}/deadlines/{deadlineId}", projectId.toString(), deadlineId.toString()))
+                .andExpect(status().isNoContent());
+
+        verify(projectDeadlineService).deleteDeadline(projectId, deadlineId);
     }
 }

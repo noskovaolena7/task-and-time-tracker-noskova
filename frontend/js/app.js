@@ -420,11 +420,13 @@ async function viewProjectDetail(pid) {
   const m = $("#main");
   const p = await withErr(() => Api.projects.get(pid));
   if (!p) { m.innerHTML = `<p>${esc(t("proj.notfound"))}</p>`; return; }
-  const [members, deadlines, tasks] = await Promise.all([
+  const [members, deadlines, tasks, coMembers] = await Promise.all([
     Api.projects.members(pid).catch(() => []),
     Api.projects.deadlines(pid).catch(() => []),
     Api.tasks.list({ project_id: pid }).catch(() => []),
+    p.company_id ? Api.companies.members(p.company_id).catch(() => []) : [],
   ]);
+  const isOwner = (coMembers || []).some((x) => x.user_id === S.me.id && x.role === "OWNER");
   m.innerHTML = `<h2>${esc(p.name)}</h2>
     <div><span class="tag">${p.company_id ? "company" : esc(t("tag.personal"))}</span> <span class="tag">${fmtDate(p.created_at)}</span></div>
     <p>${esc(p.description || "")}</p>
@@ -447,7 +449,7 @@ async function viewProjectDetail(pid) {
       <button class="btn small" id="nm-btn">${esc(t("common.add"))}</button></div>
     </div>
     <div class="detail"><h3>${esc(t("proj.deadlines"))}</h3>
-      <ul class="clean">${deadlines.map((d) => `<li>${esc(d.title || "")} — ${fmtDate(d.deadline)} <span class="tag">${esc((d.reminder_periods || []).join(", "))}</span></li>`).join("")}</ul>
+      <ul class="clean">${deadlines.map((d) => `<li>${esc(d.title || "")} — ${fmtDate(d.deadline)} <span class="tag">${esc((d.reminder_periods || []).join(", "))}</span>${(d.created_by === S.me.id || p.created_by === S.me.id || isOwner) ? ` <button class="ghost" data-del-deadline="${d.id}">${esc(t("common.delete"))}</button>` : ""}</li>`).join("")}</ul>
       <div class="toolbar"><input id="nd-title" placeholder="${esc(t("proj.deadline_title_ph"))}" /><input id="nd-at" type="datetime-local" />
       <button class="btn small" id="nd-btn">${esc(t("common.add"))}</button></div>
     </div>`;
@@ -477,6 +479,10 @@ async function viewProjectDetail(pid) {
     const r = await withErr(() => Api.projects.createDeadline(pid, { deadline: at, title: $("#nd-title").value || undefined, reminder_periods: [], created_by: S.me.id }), t("common.added"));
     if (r) viewProjectDetail(pid);
   };
+  $$("[data-del-deadline]").forEach((b) => (b.onclick = async () => {
+    const r = await withErr(() => Api.projects.deleteDeadline(pid, b.dataset.delDeadline), t("common.deleted"));
+    if (r !== null) viewProjectDetail(pid);
+  }));
 }
 
 /* ---------- tasks ---------- */

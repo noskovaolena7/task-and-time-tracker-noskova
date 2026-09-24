@@ -136,4 +136,41 @@ class ProjectDeadlineServiceTest {
         ProjectDeadline res = projectDeadlineService.updateDeadline(projectId, deadlineId, req);
         assertEquals(deadlineId, res.getId());
     }
+
+    @Test
+    void deleteDeadline_success() {
+        UUID projectId = UUID.randomUUID();
+        UUID deadlineId = UUID.randomUUID();
+        ProjectDeadlineEntity entity = new ProjectDeadlineEntity();
+        entity.setId(deadlineId);
+        entity.setProjectId(projectId);
+
+        when(projectDeadlineRepository.findById(deadlineId)).thenReturn(Optional.of(entity));
+
+        projectDeadlineService.deleteDeadline(projectId, deadlineId);
+
+        verify(projectDeadlineRepository).delete(entity);
+    }
+
+    @Test
+    void deleteDeadline_notFound_throws() {
+        UUID deadlineId = UUID.randomUUID();
+        when(projectDeadlineRepository.findById(deadlineId)).thenReturn(Optional.empty());
+
+        assertThrows(ProjectDeadlineNotFoundException.class,
+                () -> projectDeadlineService.deleteDeadline(UUID.randomUUID(), deadlineId));
+    }
+
+    @Test
+    void deleteDeadline_projectMismatch_throws() {
+        UUID deadlineId = UUID.randomUUID();
+        ProjectDeadlineEntity entity = new ProjectDeadlineEntity();
+        entity.setId(deadlineId);
+        entity.setProjectId(UUID.randomUUID());
+
+        when(projectDeadlineRepository.findById(deadlineId)).thenReturn(Optional.of(entity));
+
+        assertThrows(ProjectDeadlineNotFoundException.class,
+                () -> projectDeadlineService.deleteDeadline(UUID.randomUUID(), deadlineId));
+    }
 }

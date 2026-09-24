@@ -104,6 +104,7 @@ const Api = (() => {
       deadlines: (pid) => get(`/projects/${pid}/deadlines`),
       createDeadline: (pid, b) => post(`/projects/${pid}/deadlines`, b),
       updateDeadline: (pid, did, b) => put(`/projects/${pid}/deadlines/${did}`, b),
+      deleteDeadline: (pid, did) => del(`/projects/${pid}/deadlines/${did}`),
     },
     tasks: {
       list: (q = {}) => {
