@@ -58,7 +58,8 @@ a { color: var(--accent); }
 .pass-wrap { position: relative; display: block; }
 .pass-wrap input { width: 100%; padding-right: 40px; box-sizing: border-box; }
 .pass-wrap .eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
-  background: transparent; border: 0; font-size: 17px; padding: 4px 6px; }
+  background: transparent; border: 0; font-size: 17px; padding: 4px 6px;
+  opacity: .55; filter: grayscale(1); }
 .floaties { position: absolute; inset: 0; pointer-events: none; font-size: 64px; perspective: 600px; }
 .floaties span { position: absolute; opacity: .9; transform-style: preserve-3d;
   filter: drop-shadow(0 14px 10px rgba(0,0,0,.45)); }
@@ -151,6 +152,5 @@ ul.clean li { background: var(--panel2); border-radius: 8px; padding: 8px 12px; 
   .sidebar { display: none; }
   .sidebar.open { display: flex; position: fixed; top: 0; right: 0; width: min(78vw, 280px);
     height: 100vh; z-index: 50; border-right: 0; border-left: 1px solid #2c3f7d; overflow-y: auto; }
-  #logout-btn { margin-top: auto; }
   main { padding: 60px 16px 16px; }
 }
