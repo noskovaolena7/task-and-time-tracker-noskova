@@ -1501,6 +1501,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete project deadline
+      tags: [Project Deadlines]
+      parameters:
+        - $ref: "#/components/parameters/projectId"
+        - in: path
+          name: deadlineId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        204:
+          description: Deleted
+        401:
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        403:
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /tasks/{taskId}/reminders:
     get:

@@ -52,7 +52,7 @@ public class ProjectDeadlineController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
     @PutMapping("/{deadlineId}")
-    @PreAuthorize("@securityService.canUpdateDeadline(#projectId)")
+    @PreAuthorize("@securityService.canUpdateDeadline(#projectId, #deadlineId)")
     public ResponseEntity<ProjectDeadlineResponseDto> updateDeadline(
             @PathVariable UUID projectId,
             @PathVariable UUID deadlineId,
@@ -60,5 +60,15 @@ public class ProjectDeadlineController {
 
         ProjectDeadline updated = projectDeadlineService.updateDeadline(projectId, deadlineId, request);
         return ResponseEntity.ok(projectDeadlineMapper.toDto(updated));
+    }
+
+    @DeleteMapping("/{deadlineId}")
+    @PreAuthorize("@securityService.canDeleteDeadline(#projectId, #deadlineId)")
+    public ResponseEntity<Void> deleteDeadline(
+            @PathVariable UUID projectId,
+            @PathVariable UUID deadlineId) {
+
+        projectDeadlineService.deleteDeadline(projectId, deadlineId);
+        return ResponseEntity.noContent().build();
     }
 }

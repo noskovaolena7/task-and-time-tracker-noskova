@@ -81,5 +81,18 @@ public class ProjectDeadlineServiceImpl implements ProjectDeadlineService {
         return projectDeadlineMapper.toDomain(saved);
     }
 
+    @Override
+    public void deleteDeadline(UUID projectId, UUID deadlineId) {
+
+        ProjectDeadlineEntity entity = projectDeadlineRepository.findById(deadlineId)
+                .orElseThrow(() -> new ProjectDeadlineNotFoundException(deadlineId));
+
+        if (projectId != null && !projectId.equals(entity.getProjectId())) {
+            throw new ProjectDeadlineNotFoundException(deadlineId);
+        }
+
+        projectDeadlineRepository.delete(entity);
+    }
+
 
 }

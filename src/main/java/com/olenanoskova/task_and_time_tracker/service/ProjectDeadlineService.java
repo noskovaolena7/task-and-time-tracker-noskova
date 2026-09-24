@@ -15,4 +15,6 @@ public interface ProjectDeadlineService {
     ProjectDeadline getDeadlineById(UUID id);
 
     ProjectDeadline updateDeadline(UUID projectId, UUID deadlineId, ProjectDeadlineUpdateRequestDto request);
+
+    void deleteDeadline(UUID projectId, UUID deadlineId);
 }

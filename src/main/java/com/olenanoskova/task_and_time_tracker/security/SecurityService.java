@@ -27,6 +27,7 @@ public class SecurityService {
     private final CommentRepository commentRepository;
     private final TaskRepository taskRepository;
     private final AttachmentRepository attachmentRepository;
+    private final ProjectDeadlineRepository projectDeadlineRepository;
     private final TokenService tokenService;
 
 
@@ -191,6 +192,8 @@ public class SecurityService {
     public boolean canListUsers() {
         UUID requesterId = getCurrentUserId();
         if (requesterId == null) return false;
+
+        if (!companyRepository.findByOwnerId(requesterId).isEmpty()) return true;
 
         return !getManagedCompanyIds(requesterId).isEmpty();
     }
@@ -485,18 +488,40 @@ public class SecurityService {
         return projectMemberRepository.existsByProjectIdAndUserId(projectId, requesterId);
     }
 
-    public boolean canUpdateDeadline(UUID projectId) {
+    /**
+     * Authorizes deadline update/delete: the company OWNER (no restrictions),
+     * the deadline author, or the project creator (who manages everything in
+     * their own project). Company roles alone do NOT grant it: a deadline set
+     * by an admin cannot be changed or removed by a user/manager it was
+     * assigned to.
+     */
+    public boolean canUpdateDeadline(UUID projectId, UUID deadlineId) {
+        return canManageDeadline(projectId, deadlineId);
+    }
+
+    public boolean canDeleteDeadline(UUID projectId, UUID deadlineId) {
+        return canManageDeadline(projectId, deadlineId);
+    }
+
+    private boolean canManageDeadline(UUID projectId, UUID deadlineId) {
         UUID requesterId = getCurrentUserId();
-        if (requesterId == null) return false;
+        if (requesterId == null || projectId == null || deadlineId == null) return false;
 
         if (isPersonalProject(projectId)) {
             return isPersonalProjectOwner(projectId, requesterId);
         }
 
         UUID companyId = projectRepository.findCompanyIdByProjectId(projectId);
+        if (hasCompanyRole(companyId, requesterId, "OWNER")) return true;
 
-        return isOwnerOrAdmin(companyId, requesterId)
-                || isManager(companyId, requesterId);
+        var deadline = projectDeadlineRepository.findById(deadlineId).orElse(null);
+        if (deadline == null || !projectId.equals(deadline.getProjectId())) return false;
+
+        if (requesterId.equals(deadline.getCreatedBy())) return true;
+
+        return projectRepository.findById(projectId)
+                .map(p -> requesterId.equals(p.getCreatedBy()))
+                .orElse(false);
     }
 
     // -------------------------------
@@ -661,16 +686,22 @@ public class SecurityService {
     }
 
     /**
-     * Authorizes workspace management: only the recorded owner may delete it.
-     * A personal workspace therefore stays until its owner deletes it.
+     * Authorizes workspace management: the recorded owner, or the OWNER of
+     * the company a COMPANY workspace belongs to. A personal workspace
+     * therefore stays until its owner deletes it.
      */
     public boolean canManageWorkspace(UUID workspaceId) {
         UUID requesterId = getCurrentUserId();
         if (requesterId == null || workspaceId == null) return false;
 
-        return workspaceRepository.findById(workspaceId)
-                .map(ws -> requesterId.equals(ws.getOwnerId()))
-                .orElse(false);
+        var ws = workspaceRepository.findById(workspaceId).orElse(null);
+        if (ws == null) return false;
+
+        if (requesterId.equals(ws.getOwnerId())) return true;
+
+        return ws.getType() == com.olenanoskova.task_and_time_tracker.repository.entity.WorkspaceTypeEntity.COMPANY
+                && ws.getCompanyId() != null
+                && hasCompanyRole(ws.getCompanyId(), requesterId, "OWNER");
     }
 
     // -------------------------------
