@@ -372,13 +372,18 @@ async function viewProfile() {
       <label>${esc(t("f.last"))}<input id="pf-last" value="${esc(S.me.last_name || "")}" /></label>
       <label>${esc(t("f.phone"))}<input id="pf-phone" value="${esc(S.me.phone_number || "")}" /></label>
       <label>Email<input value="${esc(S.me.email || "")}" disabled /></label>
-      <label><input type="checkbox" id="pf-showpers" ${personalVisible() ? "checked" : ""} /> ${esc(t("profile.show_personal"))}</label>
       <button class="btn" id="pf-save">${esc(t("common.save"))}</button>
+    </div>
+    <div class="detail"><h3>Personal Workspace</h3>
+      <div class="toolbar"><button class="btn small" id="pf-pers-toggle">${esc(personalVisible() ? t("profile.pers_off") : t("profile.pers_on"))}</button></div>
     </div>
     <div class="detail"><h3>${esc(t("account.title"))}</h3>
       <p class="muted">${esc(t("account.hint"))}</p>
       <button class="btn small danger" id="acc-del">${esc(t("account.delete"))}</button></div>`;
-  $("#pf-showpers").onchange = (e) => setPersonalVisible(e.target.checked);
+  $("#pf-pers-toggle").onclick = () => {
+    setPersonalVisible(!personalVisible());
+    viewProfile();
+  };
   $("#pf-save").onclick = async () => {    const r = await withErr(() => Api.users.update(S.me.id, {
       first_name: $("#pf-first").value, last_name: $("#pf-last").value, phone_number: $("#pf-phone").value,
     }), t("common.saved"));
@@ -671,6 +676,11 @@ async function viewCompanyDetail(cid) {
   const roles = [];
   const myRole = (members.find((x) => x.user_id === S.me.id) || {}).role;
   const canManage = myRole === "OWNER" || myRole === "ADMIN";
+  let visibleProjects = projects || [];
+  if (myRole !== "OWNER") {
+    const memberships = await Promise.all(visibleProjects.map((p) => Api.projects.members(p.id).catch(() => null)));
+    visibleProjects = visibleProjects.filter((p, i) => (memberships[i] || []).some((x) => x.user_id === S.me.id));
+  }
   m.innerHTML = `<h2>${esc(c.name)}</h2>
     <div><span class="tag">${esc(t("comp.your_role"))}: ${esc(myRole || "—")}</span> <span class="tag">${esc(t("comp.owner"))}: ${shortId(c.owner_id)}</span></div>
     <p>${esc(c.description || "")}</p>
@@ -678,7 +688,7 @@ async function viewCompanyDetail(cid) {
     <button class="btn small" id="ce-save">${esc(t("common.save"))}</button>
     <button class="btn small danger" id="ce-del">${esc(t("common.delete"))}</button></div>
     <div class="detail"><h3>${esc(t("comp.projects"))}</h3>
-      <ul class="clean">${projects.map((p) => `<li><a href="#/projects/${p.id}">${esc(p.name)}</a></li>`).join("")}</ul></div>
+      <ul class="clean">${visibleProjects.map((p) => `<li><a href="#/projects/${p.id}">${esc(p.name)}</a></li>`).join("")}</ul></div>
     <div class="detail"><h3>${esc(t("comp.team"))}</h3>
       <div class="toolbar"><input id="mem-search" placeholder="${esc(t("team.search_ph"))}" style="flex:1" />
       <select id="mem-role"><option value="">${esc(t("team.all_roles"))}</option><option>USER</option><option>MANAGER</option><option>ADMIN</option><option>OWNER</option></select></div>
