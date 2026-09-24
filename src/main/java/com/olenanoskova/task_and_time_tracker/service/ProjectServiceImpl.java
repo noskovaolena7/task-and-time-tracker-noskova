@@ -6,6 +6,7 @@ import com.olenanoskova.task_and_time_tracker.exception.ProjectAlreadyExistExcep
 import com.olenanoskova.task_and_time_tracker.exception.ProjectNotFoundException;
 import com.olenanoskova.task_and_time_tracker.mapper.ProjectMapper;
 import com.olenanoskova.task_and_time_tracker.repository.CompanyRepository;
+import com.olenanoskova.task_and_time_tracker.repository.ProjectMemberRepository;
 import com.olenanoskova.task_and_time_tracker.repository.ProjectRepository;
 import com.olenanoskova.task_and_time_tracker.repository.entity.ProjectEntity;
 import com.olenanoskova.task_and_time_tracker.service.model.Project;
@@ -26,6 +27,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
     private final CompanyRepository companyRepository;
+    private final ProjectMemberRepository projectMemberRepository;
     private final ProjectMapper projectMapper;
 
     @Override
@@ -104,6 +106,18 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         return entities.stream()
+                .map(projectMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Project> getMemberProjects(UUID userId) {
+
+        log.info("Fetching member projects for user {}", userId);
+
+        List<UUID> projectIds = projectMemberRepository.findProjectIdsByUserId(userId);
+
+        return projectRepository.findAllById(projectIds).stream()
                 .map(projectMapper::toDomain)
                 .toList();
     }

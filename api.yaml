@@ -2066,6 +2066,16 @@ components:
         member_role:
           type: string
           enum: [ USER, MANAGER, ADMIN, OWNER ]
+        first_name:
+          type: string
+          nullable: true
+        last_name:
+          type: string
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
         created_at:
           type: string
           format: date-time

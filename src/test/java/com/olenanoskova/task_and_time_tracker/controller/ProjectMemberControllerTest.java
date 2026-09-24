@@ -27,6 +27,9 @@ class ProjectMemberControllerTest {
     @Mock
     com.olenanoskova.task_and_time_tracker.mapper.ProjectMemberMapper mapper;
 
+    @Mock
+    com.olenanoskova.task_and_time_tracker.service.UserService userService;
+
     @InjectMocks
     com.olenanoskova.task_and_time_tracker.controller.ProjectMemberController controller;
 
@@ -83,6 +86,38 @@ class ProjectMemberControllerTest {
         mvc.perform(get("/projects/{id}/members", projectId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void getMembers_enrichesWithUserNames() throws Exception {
+        UUID projectId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+
+        var domain = new com.olenanoskova.task_and_time_tracker.service.model.ProjectMember();
+        domain.setId(UUID.randomUUID());
+        domain.setUserId(userId);
+        domain.setProjectId(projectId);
+
+        var resp = new com.olenanoskova.task_and_time_tracker.controller.dto.ProjectMemberResponseDto();
+        resp.setId(domain.getId());
+        resp.setUserId(userId);
+        resp.setProjectId(projectId);
+
+        var user = new com.olenanoskova.task_and_time_tracker.service.model.User();
+        user.setId(userId);
+        user.setFirstName("Marta");
+        user.setLastName("Fox");
+        user.setEmail("marta@example.com");
+
+        when(service.getMembers(projectId)).thenReturn(java.util.List.of(domain));
+        when(mapper.toDto(domain)).thenReturn(resp);
+        when(userService.getUserById(userId)).thenReturn(user);
+
+        mvc.perform(get("/projects/{id}/members", projectId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].firstName").value("Marta"))
+                .andExpect(jsonPath("$[0].lastName").value("Fox"))
+                .andExpect(jsonPath("$[0].email").value("marta@example.com"));
     }
 
     @Test

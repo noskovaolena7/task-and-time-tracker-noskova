@@ -5,8 +5,11 @@ import com.olenanoskova.task_and_time_tracker.controller.dto.ProjectMemberCreate
 import com.olenanoskova.task_and_time_tracker.controller.dto.ProjectMemberResponseDto;
 import com.olenanoskova.task_and_time_tracker.mapper.ProjectMemberMapper;
 import com.olenanoskova.task_and_time_tracker.service.ProjectMemberService;
+import com.olenanoskova.task_and_time_tracker.service.UserService;
 import com.olenanoskova.task_and_time_tracker.service.model.ProjectMember;
+import com.olenanoskova.task_and_time_tracker.service.model.User;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,10 +22,12 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/projects/{projectId}/members")
 @RequiredArgsConstructor
+@Slf4j
 public class ProjectMemberController {
 
     private final ProjectMemberService memberService;
     private final ProjectMemberMapper memberMapper;
+    private final UserService userService;
 
     @GetMapping
     @PreAuthorize("@securityService.canListProjectMembers(#projectId)")
@@ -30,9 +35,21 @@ public class ProjectMemberController {
         List<ProjectMember> members = memberService.getMembers(projectId);
         List<ProjectMemberResponseDto> responseList = members.stream()
                 .map(memberMapper::toDto)
+                .peek(this::enrichWithUserData)
                 .toList();
 
         return ResponseEntity.ok(responseList);
+    }
+
+    private void enrichWithUserData(ProjectMemberResponseDto dto) {
+        try {
+            User user = userService.getUserById(dto.getUserId());
+            dto.setFirstName(user.getFirstName());
+            dto.setLastName(user.getLastName());
+            dto.setEmail(user.getEmail());
+        } catch (RuntimeException e) {
+            log.warn("Skipping user data for project member {}: {}", dto.getUserId(), e.getMessage());
+        }
     }
 
     @PostMapping

@@ -460,7 +460,7 @@ async function viewProjectDetail(pid) {
       <button class="btn small" id="nt-btn">${esc(t("common.add"))}</button></div>
     </div>
     <div class="detail"><h3>${esc(t("proj.members"))}</h3>
-      <ul class="clean">${members.map((x) => `<li>${shortId(x.user_id)} — ${esc(x.member_role)} <button class="ghost" data-del-member="${x.user_id}">${esc(t("proj.remove_member"))}</button></li>`).join("")}</ul>
+      <ul class="clean">${members.map((x) => { const who = `${esc(x.first_name || "")} ${esc(x.last_name || "")}`.trim() || shortId(x.user_id); return `<li>${who}${x.email ? ` <span class="muted">${esc(x.email)}</span>` : ""} — ${esc(x.member_role)} <button class="ghost" data-del-member="${x.user_id}">${esc(t("proj.remove_member"))}</button></li>`; }).join("")}</ul>
       <div class="toolbar"><input id="nm-user" placeholder="${esc(t("proj.new_member_ph"))}" style="width:300px" />
       <select id="nm-role"><option>USER</option><option>MANAGER</option><option>ADMIN</option><option>OWNER</option></select>
       <button class="btn small" id="nm-btn">${esc(t("common.add"))}</button></div>

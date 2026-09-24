@@ -50,8 +50,11 @@ public class ProjectController {
 
         List<Project> projects;
         if (ownCompanyIds.isEmpty()) {
-            // Personal workspace: only own projects without a company.
-            projects = projectService.getPersonalProjects(currentUserId, page, size);
+            // Personal workspace: own projects without a company plus
+            // personal projects where the user is a member.
+            projects = mergeDistinct(
+                    projectService.getPersonalProjects(currentUserId, page, size),
+                    projectService.getMemberProjects(currentUserId));
         } else {
             if (companyId != null && !ownCompanyIds.contains(companyId)) {
                 throw new org.springframework.security.access.AccessDeniedException(
@@ -72,14 +75,31 @@ public class ProjectController {
                     projects = projects.subList(from, to);
                 }
             }
-            // Personal projects remain visible alongside company ones.
+            // Personal projects remain visible alongside company ones,
+            // plus projects where the user is a member.
             projects.addAll(projectService.getPersonalProjects(currentUserId, null, null));
+            projects = mergeDistinct(projects, projectService.getMemberProjects(currentUserId));
         }
         List<ProjectResponseDto> responseList = projects.stream()
                 .map(projectMapper::toDto)
                 .toList();
 
         return ResponseEntity.ok(responseList);
+    }
+
+    private static List<Project> mergeDistinct(List<Project> a, List<Project> b) {
+        java.util.Map<UUID, Project> map = new java.util.LinkedHashMap<>();
+        if (a != null) {
+            for (Project p : a) {
+                if (p != null && p.getId() != null) map.put(p.getId(), p);
+            }
+        }
+        if (b != null) {
+            for (Project p : b) {
+                if (p != null && p.getId() != null) map.putIfAbsent(p.getId(), p);
+            }
+        }
+        return new java.util.ArrayList<>(map.values());
     }
 
     @GetMapping("/{id}")

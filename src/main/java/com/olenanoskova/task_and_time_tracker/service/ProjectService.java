@@ -16,6 +16,12 @@ public interface ProjectService {
      */
     List<Project> getPersonalProjects(UUID userId, Integer page, Integer size);
 
+    /**
+     * Projects where the user is a member (personal or company ones).
+     * Membership grants access even without authorship or company role.
+     */
+    List<Project> getMemberProjects(UUID userId);
+
     Project getProjectById(UUID id);
 
     Project updateProject(UUID id, Project project);
