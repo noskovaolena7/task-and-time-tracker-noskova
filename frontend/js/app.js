@@ -345,7 +345,6 @@ async function viewDashboard() {
   const showPersonalTab = dashTab !== "companies", showCompanies = cv && dashTab !== "personal";
   if (showPersonalTab) {
     html += `<h3>${esc(t("dash.pws"))}</h3>`;
-    html += `<div class="toolbar"><span>${esc(t("dash.cws"))}</span> <button class="btn small" id="dash-comp-toggle">${esc(cv ? t("profile.pers_off") : t("profile.pers_on"))}</button></div>`;
     if (pv) {
       html += personal.length
         ? `<div class="grid">${sortBy(personal, S.sort.key === "title" ? "name" : S.sort.key, S.sort.dir).map(projCard).join("")}</div>`
@@ -360,8 +359,6 @@ async function viewDashboard() {
       : `<p class="muted">${esc(t("dash.no_company_projects"))}</p>`;
   }
   $("#dash-body").innerHTML = html;
-  const compToggle = $("#dash-comp-toggle");
-  if (compToggle) compToggle.onclick = () => { setCompaniesVisible(!companiesVisible()); viewDashboard(); };
   if (!hasCompany()) {
     $("#dash-body").insertAdjacentHTML("beforeend",
       `<div class="detail"><h3>${esc(t("team.join"))}</h3>
@@ -390,17 +387,17 @@ async function viewProfile() {
       <label>Email<input value="${esc(S.me.email || "")}" disabled /></label>
       <button class="btn" id="pf-save">${esc(t("common.save"))}</button>
     </div>
-    <div class="detail"><h3>${esc(hasCompany() ? t("dash.pws") : t("dash.cws"))}</h3>
-    <div class="toolbar"><button class="btn small" id="pf-ws-toggle">${esc((hasCompany() ? personalVisible() : companiesVisible()) ? t("profile.pers_off") : t("profile.pers_on"))}</button></div></div>
+    <div class="detail"><h3>${esc(t("dash.pws"))}</h3>
+    <div class="toolbar"><button class="btn small" id="pf-pers-toggle">${esc(personalVisible() ? t("profile.pers_off") : t("profile.pers_on"))}</button></div></div>
+    <div class="detail"><h3>${esc(t("dash.cws"))}</h3>
+    <div class="toolbar"><button class="btn small" id="pf-comp-toggle">${esc(companiesVisible() ? t("profile.pers_off") : t("profile.pers_on"))}</button></div></div>
     <div class="detail"><h3>${esc(t("account.title"))}</h3>
       <p class="muted">${esc(t("account.hint"))}</p>
       <button class="btn small danger" id="acc-del">${esc(t("account.delete"))}</button></div>`;
-  const wsToggle = $("#pf-ws-toggle");
-  if (wsToggle) wsToggle.onclick = () => {
-    if (hasCompany()) setPersonalVisible(!personalVisible());
-    else setCompaniesVisible(!companiesVisible());
-    viewProfile();
-  };
+  const persToggle = $("#pf-pers-toggle");
+  if (persToggle) persToggle.onclick = () => { setPersonalVisible(!personalVisible()); viewProfile(); };
+  const compTogglePf = $("#pf-comp-toggle");
+  if (compTogglePf) compTogglePf.onclick = () => { setCompaniesVisible(!companiesVisible()); viewProfile(); };
   $("#pf-save").onclick = async () => {    const r = await withErr(() => Api.users.update(S.me.id, {
       first_name: $("#pf-first").value, last_name: $("#pf-last").value, phone_number: $("#pf-phone").value,
     }), t("common.saved"));
@@ -703,8 +700,6 @@ async function viewCompanyDetail(cid) {
   m.innerHTML = `<h2>${esc(c.name)}</h2>
     <div><span class="tag">${esc(t("comp.your_role"))}: ${esc(myRole || "—")}</span> <span class="tag">${esc(t("comp.owner"))}: ${shortId(c.owner_id)}</span></div>
     <p>${esc(c.description || "")}</p>
-    <div class="detail"><h3>${esc(t("dash.pws"))}</h3>
-    <div class="toolbar"><button class="btn small" id="co-pers-toggle">${esc(personalVisible() ? t("profile.pers_off") : t("profile.pers_on"))}</button></div></div>
     <div class="toolbar"><input id="ce-name" value="${esc(c.name)}" /><input id="ce-desc" value="${esc(c.description || "")}" />
     <button class="btn small" id="ce-save">${esc(t("common.save"))}</button>
     <button class="btn small danger" id="ce-del">${esc(t("common.delete"))}</button></div>
@@ -726,8 +721,6 @@ async function viewCompanyDetail(cid) {
     const r = await withErr(() => Api.companies.update(cid, { name: $("#ce-name").value, description: $("#ce-desc").value }), t("common.saved"));
     if (r) viewCompanyDetail(cid);
   };
-  const coPersToggle = $("#co-pers-toggle");
-  if (coPersToggle) coPersToggle.onclick = () => { setPersonalVisible(!personalVisible()); viewCompanyDetail(cid); };
   $("#ce-del").onclick = async () => {
     if (!confirm(t("comp.del_confirm"))) return;
     const r = await withErr(() => Api.companies.remove(cid), t("common.deleted"));
