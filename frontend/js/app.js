@@ -372,13 +372,18 @@ async function viewProfile() {
       <label>${esc(t("f.last"))}<input id="pf-last" value="${esc(S.me.last_name || "")}" /></label>
       <label>${esc(t("f.phone"))}<input id="pf-phone" value="${esc(S.me.phone_number || "")}" /></label>
       <label>Email<input value="${esc(S.me.email || "")}" disabled /></label>
-      <label><input type="checkbox" id="pf-showpers" ${personalVisible() ? "" : "checked"} /> ${esc(t("profile.show_personal"))}</label>
       <button class="btn" id="pf-save">${esc(t("common.save"))}</button>
+    </div>
+    <div class="detail"><h3>Personal Workspace</h3>
+      <div class="toolbar"><button class="btn small" id="pf-pers-toggle">${esc(personalVisible() ? t("profile.pers_off") : t("profile.pers_on"))}</button></div>
     </div>
     <div class="detail"><h3>${esc(t("account.title"))}</h3>
       <p class="muted">${esc(t("account.hint"))}</p>
       <button class="btn small danger" id="acc-del">${esc(t("account.delete"))}</button></div>`;
-  $("#pf-showpers").onchange = (e) => setPersonalVisible(!e.target.checked);
+  $("#pf-pers-toggle").onclick = () => {
+    setPersonalVisible(!personalVisible());
+    viewProfile();
+  };
   $("#pf-save").onclick = async () => {    const r = await withErr(() => Api.users.update(S.me.id, {
       first_name: $("#pf-first").value, last_name: $("#pf-last").value, phone_number: $("#pf-phone").value,
     }), t("common.saved"));
