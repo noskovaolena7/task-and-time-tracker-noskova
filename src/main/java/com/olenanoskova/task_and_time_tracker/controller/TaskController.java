@@ -67,7 +67,7 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("@securityService.canAccessTask(#id)")
+    @PreAuthorize("@securityService.canUpdateTask(#id)")
     public ResponseEntity<TaskResponseDto> updateTask(@PathVariable UUID id, @Valid @RequestBody TaskUpdateRequestDto request) {
         Task task = taskService.getTaskById(id);
         taskMapper.updateDomain(request, task);

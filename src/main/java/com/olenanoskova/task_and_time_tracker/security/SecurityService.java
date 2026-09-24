@@ -158,8 +158,7 @@ public class SecurityService {
                 || userId.equals(task.getCreatedBy());
     }
 
-    public boolean canDeleteTask(UUID taskId) {
-        UUID userId = getCurrentUserId();
+    public boolean canDeleteTask(UUID taskId) {        UUID userId = getCurrentUserId();
         if (userId == null) return false;
 
         TaskEntity task = taskRepository.findById(taskId).orElse(null);
@@ -176,6 +175,29 @@ public class SecurityService {
         if (isOwnerOrAdmin(companyId, userId)) return true;
 
         return userId.equals(task.getCreatedBy());
+    }
+
+    /**
+     * Authorizes task update: in a personal project only the project owner,
+     * the task creator or the assignee (to execute it). A member added to
+     * someone's personal project may update only own or assigned tasks.
+     * Company projects keep access-task semantics.
+     */
+    public boolean canUpdateTask(UUID taskId) {
+        UUID userId = getCurrentUserId();
+        if (userId == null) return false;
+
+        TaskEntity task = taskRepository.findById(taskId).orElse(null);
+        if (task == null) return false;
+
+        UUID projectId = task.getProjectId();
+        if (isPersonalProject(projectId)) {
+            return isPersonalProjectOwner(projectId, userId)
+                    || userId.equals(task.getCreatedBy())
+                    || userId.equals(task.getAssignedTo());
+        }
+
+        return canAccessTask(taskId);
     }
 
     // -------------------------------

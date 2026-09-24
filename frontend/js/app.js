@@ -444,13 +444,14 @@ async function viewProjectDetail(pid) {
     p.company_id ? Api.companies.members(p.company_id).catch(() => []) : [],
   ]);
   const isOwner = (coMembers || []).some((x) => x.user_id === S.me.id && x.role === "OWNER");
+  const canManageProj = p.company_id ? true : p.created_by === S.me.id;
   m.innerHTML = `<h2>${esc(p.name)}</h2>
     <div><span class="tag">${p.company_id ? "company" : esc(t("tag.personal"))}</span> <span class="tag">${fmtDate(p.created_at)}</span></div>
     <p>${esc(p.description || "")}</p>
     <div class="toolbar">
       <input id="pe-name" value="${esc(p.name)}" /> <input id="pe-desc" value="${esc(p.description || "")}" />
-      <button class="btn small" id="pe-save">${esc(t("common.save"))}</button>
-      <button class="btn small danger" id="pe-del">${esc(t("common.delete"))}</button>
+      ${canManageProj ? `<button class="btn small" id="pe-save">${esc(t("common.save"))}</button>
+      <button class="btn small danger" id="pe-del">${esc(t("common.delete"))}</button>` : ""}
     </div>
     <div class="detail"><h3>${esc(t("proj.tasks"))} (${tasks.length})</h3>
       <ul class="clean">${tasks.map((x) => `<li><a href="#/tasks/${x.id}">${esc(x.title)}</a> <span class="tag">${esc(x.status)}</span> <span class="tag">${esc(x.priority)}</span></li>`).join("")}</ul>
@@ -460,21 +461,23 @@ async function viewProjectDetail(pid) {
       <button class="btn small" id="nt-btn">${esc(t("common.add"))}</button></div>
     </div>
     <div class="detail"><h3>${esc(t("proj.members"))}</h3>
-      <ul class="clean">${members.map((x) => { const who = `${esc(x.first_name || "")} ${esc(x.last_name || "")}`.trim() || shortId(x.user_id); return `<li>${who}${x.email ? ` <span class="muted">${esc(x.email)}</span>` : ""} — ${esc(x.member_role)} <button class="ghost" data-del-member="${x.user_id}">${esc(t("proj.remove_member"))}</button></li>`; }).join("")}</ul>
-      <div class="toolbar"><input id="nm-user" placeholder="${esc(t("proj.new_member_ph"))}" style="width:300px" />
+      <ul class="clean">${members.map((x) => { const who = `${esc(x.first_name || "")} ${esc(x.last_name || "")}`.trim() || shortId(x.user_id); return `<li>${who}${x.email ? ` <span class="muted">${esc(x.email)}</span>` : ""} — ${esc(x.member_role)}${canManageProj ? ` <button class="ghost" data-del-member="${x.user_id}">${esc(t("proj.remove_member"))}</button>` : ""}</li>`; }).join("")}</ul>
+      ${canManageProj ? `<div class="toolbar"><input id="nm-user" placeholder="${esc(t("proj.new_member_ph"))}" style="width:300px" />
       <select id="nm-role"><option>USER</option><option>MANAGER</option><option>ADMIN</option><option>OWNER</option></select>
-      <button class="btn small" id="nm-btn">${esc(t("common.add"))}</button></div>
+      <button class="btn small" id="nm-btn">${esc(t("common.add"))}</button></div>` : ""}
     </div>
     <div class="detail"><h3>${esc(t("proj.deadlines"))}</h3>
       <ul class="clean">${deadlines.map((d) => `<li>${esc(d.title || "")} — ${fmtDate(d.deadline)} <span class="tag">${esc((d.reminder_periods || []).join(", "))}</span>${(d.created_by === S.me.id || p.created_by === S.me.id || isOwner) ? ` <button class="ghost" data-del-deadline="${d.id}">${esc(t("common.delete"))}</button>` : ""}</li>`).join("")}</ul>
-      <div class="toolbar"><input id="nd-title" placeholder="${esc(t("proj.deadline_title_ph"))}" /><input id="nd-at" type="datetime-local" />
-      <button class="btn small" id="nd-btn">${esc(t("common.add"))}</button></div>
+      ${canManageProj ? `<div class="toolbar"><input id="nd-title" placeholder="${esc(t("proj.deadline_title_ph"))}" /><input id="nd-at" type="datetime-local" />
+      <button class="btn small" id="nd-btn">${esc(t("common.add"))}</button></div>` : ""}
     </div>`;
-  $("#pe-save").onclick = async () => {
+  const peSave = $("#pe-save");
+  if (peSave) peSave.onclick = async () => {
     const r = await withErr(() => Api.projects.update(pid, { name: $("#pe-name").value, description: $("#pe-desc").value }), t("common.saved"));
     if (r) viewProjectDetail(pid);
   };
-  $("#pe-del").onclick = async () => {
+  const peDel = $("#pe-del");
+  if (peDel) peDel.onclick = async () => {
     if (!confirm(t("proj.confirm_del"))) return;
     const r = await withErr(() => Api.projects.remove(pid), t("common.deleted"));
     if (r !== null) location.hash = "#/projects";
@@ -483,7 +486,8 @@ async function viewProjectDetail(pid) {
     const r = await withErr(() => Api.tasks.create({ project_id: pid, title: $("#nt-title").value, status: $("#nt-status").value, priority: $("#nt-prio").value, created_by: S.me.id }), t("common.created"));
     if (r) viewProjectDetail(pid);
   };
-  $("#nm-btn").onclick = async () => {
+  const nmBtn = $("#nm-btn");
+  if (nmBtn) nmBtn.onclick = async () => {
     const raw = ($("#nm-user").value || "").trim();
     const typed = raw.toLowerCase();
     if (!typed) { toast(t("notif.type_recipient")); return; }
@@ -523,7 +527,8 @@ async function viewProjectDetail(pid) {
     const r = await withErr(() => Api.projects.removeMember(pid, b.dataset.delMember), t("common.removed"));
     if (r !== null) viewProjectDetail(pid);
   }));
-  $("#nd-btn").onclick = async () => {
+  const ndBtn = $("#nd-btn");
+  if (ndBtn) ndBtn.onclick = async () => {
     const at = $("#nd-at").value ? new Date($("#nd-at").value).toISOString() : null;
     const r = await withErr(() => Api.projects.createDeadline(pid, { deadline: at, title: $("#nd-title").value || undefined, reminder_periods: [], created_by: S.me.id }), t("common.added"));
     if (r) viewProjectDetail(pid);
@@ -563,6 +568,10 @@ async function viewTaskDetail(tid) {
   const m = $("#main");
   const x = await withErr(() => Api.tasks.get(tid));
   if (!x) { m.innerHTML = `<p>${esc(t("task.notfound"))}</p>`; return; }
+  const proj = x.project_id ? await Api.projects.get(x.project_id).catch(() => null) : null;
+  const isPersonal = proj && !proj.company_id;
+  const canEdit = !isPersonal || proj.created_by === S.me.id || x.created_by === S.me.id || x.assigned_to === S.me.id;
+  const canDelete = !isPersonal || proj.created_by === S.me.id || x.created_by === S.me.id;
   const [comments, entries, atts, rems, hist] = await Promise.all([
     Api.tasks.comments(tid).catch(() => []), Api.tasks.timeEntries(tid).catch(() => []),
     Api.tasks.attachments(tid).catch(() => []), Api.tasks.reminders(tid).catch(() => []),
@@ -575,8 +584,8 @@ async function viewTaskDetail(tid) {
     <div class="toolbar">
       <select id="te-status"><option>OPEN</option><option>IN_PROGRESS</option><option>DONE</option><option>CANCELED</option></select>
       <select id="te-prio"><option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option></select>
-      <button class="btn small" id="te-save">${esc(t("common.save"))}</button>
-      <button class="btn small danger" id="te-del">${esc(t("common.delete"))}</button>
+      ${canEdit ? `<button class="btn small" id="te-save">${esc(t("common.save"))}</button>` : ""}
+      ${canDelete ? `<button class="btn small danger" id="te-del">${esc(t("common.delete"))}</button>` : ""}
     </div>
     <div class="detail"><h3>${esc(t("task.comments"))}</h3><ul class="clean">${comments.map((c) => `<li>${esc(c.text)} <button class="ghost" data-del-comment="${c.id}">${esc(t("task.del"))}</button></li>`).join("")}</ul>
       <div class="toolbar"><input id="nc-text" placeholder="${esc(t("task.comment_ph"))}" style="flex:1" /><button class="btn small" id="nc-btn">${esc(t("common.add"))}</button></div></div>
@@ -588,11 +597,13 @@ async function viewTaskDetail(tid) {
       <div class="toolbar"><input id="nr-at" type="datetime-local" /><input id="nr-msg" placeholder="${esc(t("task.rem_text"))}" /><button class="btn small" id="nr-btn">${esc(t("common.add"))}</button></div></div>
     <div class="detail"><h3>${esc(t("task.history"))}</h3><ul class="clean">${hist.map((h) => `<li>${esc(h.field_changed)}: ${esc(h.old_value ?? "")} → ${esc(h.new_value ?? "")} (${fmtDate(h.changed_at)})</li>`).join("")}</ul></div>`;
   $("#te-status").value = x.status; $("#te-prio").value = x.priority;
-  $("#te-save").onclick = async () => {
+  const teSave = $("#te-save");
+  if (teSave) teSave.onclick = async () => {
     const r = await withErr(() => Api.tasks.update(tid, { status: $("#te-status").value, priority: $("#te-prio").value }), t("common.saved"));
     if (r) viewTaskDetail(tid);
   };
-  $("#te-del").onclick = async () => {
+  const teDel = $("#te-del");
+  if (teDel) teDel.onclick = async () => {
     if (!confirm(t("task.confirm_del"))) return;
     const r = await withErr(() => Api.tasks.remove(tid), t("common.deleted"));
     if (r !== null) location.hash = "#/tasks";
