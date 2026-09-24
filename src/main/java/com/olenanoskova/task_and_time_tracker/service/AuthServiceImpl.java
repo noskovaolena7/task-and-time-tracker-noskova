@@ -90,9 +90,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public String login(String email, String password) {
 
-        log.info("Attempting to login user with email {}", email);
+        String normalized = email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT);
+        log.info("Attempting to login user with email {}", normalized);
 
-        UserEntity userEntity = userRepository.findByEmail(email)
+        UserEntity userEntity = userRepository.findByEmail(normalized)
                 .orElseThrow(InvalidCredentialsException::new);
 
         User user = userMapper.toDomain(userEntity);

@@ -41,6 +41,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public User createUser(User user) {
 
+        user.setEmail(normalizeEmail(user.getEmail()));
         log.info("Attempting to create a user with email {}", user.getEmail());
 
         Optional<UserEntity> optionalUser = userRepository.findByEmail(user.getEmail());
@@ -83,9 +84,13 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDomain(entity);
     }
 
+    private static String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase(java.util.Locale.ROOT);
+    }
+
     @Override
     public UUID getUserIdByEmail(String email) {
-        return userRepository.findByEmail(email)
+        return userRepository.findByEmail(normalizeEmail(email))
                 .map(UserEntity::getId)
                 .orElseThrow(() -> new com.olenanoskova.task_and_time_tracker.exception.ResourceNotFoundException(
                         "User with email " + email + " not found"));

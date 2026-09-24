@@ -149,10 +149,17 @@ function renderAuthForm() {
       if (n === "phone_number") {
         return `<label>${esc(t(lKey))}${optional ? "" : ' <span class="req">*</span>'}${phoneRow()}</label>`;
       }
+      if (ty === "password") {
+        return `<label>${esc(t(lKey))}${optional ? "" : ' <span class="req">*</span>'}<span class="pass-wrap"><input name="${n}" type="password"${optional ? "" : " required"} /><button type="button" class="eye" data-eye title="show">👁</button></span></label>`;
+      }
       return `<label>${esc(t(lKey))}${optional ? "" : ' <span class="req">*</span>'}<input name="${n}" type="${ty}"${optional ? "" : " required"} /></label>`;
     }).join("") +
     `<label>${esc(t("f.backend"))}<input name="__base" value="${esc(Api.getBase())}" /></label>
      <button class="btn" type="submit">${esc(t(tab.submitKey))}</button>`;
+  $$("#auth-form [data-eye]").forEach((b) => (b.onclick = () => {
+    const i = b.parentElement.querySelector("input");
+    if (i) i.type = i.type === "password" ? "text" : "password";
+  }));
 }
 function initAuth() {
   $$("#auth-tabs .tab").forEach((b) => b.addEventListener("click", () => {
@@ -171,7 +178,7 @@ function initAuth() {
       fd.set("phone_number", "+" + cc.value + digits);
     }
     const v = {};
-    fd.forEach((val, k) => { if (k !== "__base" && val !== "") v[k] = val; });
+    fd.forEach((val, k) => { if (k !== "__base" && val !== "") v[k] = (k.toLowerCase().includes("email") && typeof val === "string") ? val.trim() : val; });
     const r = await withErr(() => AUTH_TABS[authTab].run(v));
     if (r !== null) enterApp();
   });
@@ -227,9 +234,11 @@ function updateNavVisibility() {
   });
 }
 
-/* personal workspace visibility (per browser, like theme/lang) */
+/* personal / company workspace visibility (per browser, like theme/lang) */
 const personalVisible = () => localStorage.getItem("ttt_show_personal") !== "0";
 const setPersonalVisible = (v) => localStorage.setItem("ttt_show_personal", v ? "1" : "0");
+const companiesVisible = () => localStorage.getItem("ttt_show_companies") !== "0";
+const setCompaniesVisible = (v) => localStorage.setItem("ttt_show_companies", v ? "1" : "0");
 
 /* ---------- router ---------- */
 const routes = {
@@ -278,15 +287,16 @@ window.addEventListener("hashchange", () => { checkPendingJoin(); if (Api.token(
 /* ---------- dashboard: 3 tabs ---------- */
 let dashTab = "all"; // personal | companies | all
 async function viewDashboard() {
-  const pv = personalVisible();
-  if (!pv && dashTab === "personal") dashTab = hasCompany() ? "companies" : "all";
+  const pv = personalVisible(), cv = companiesVisible();
+  if (!pv && dashTab === "personal") dashTab = "all";
+  if (!cv && dashTab === "companies") dashTab = pv ? "personal" : "all";
   if (!hasCompany() && dashTab === "companies") dashTab = "personal";
   const m = $("#main");
   m.innerHTML = `<h2>${esc(t("dash.title"))}</h2>
     <div class="tabs">
       ${pv ? `<button class="tab" data-t="personal">${esc(t("dash.personal"))}</button>` : ""}
-      ${hasCompany() ? `<button class="tab" data-t="companies">${esc(t("dash.companies"))}</button>
-      <button class="tab" data-t="all">${esc(t("dash.all"))}</button>` : ""}
+      ${hasCompany() && cv ? `<button class="tab" data-t="companies">${esc(t("dash.companies"))}</button>` : ""}
+      ${hasCompany() ? `<button class="tab" data-t="all">${esc(t("dash.all"))}</button>` : ""}
     </div>
     ${sortToolbar("dash")}
     <div id="dash-body"><p class="muted">${esc(t("common.loading"))}</p></div>`;
@@ -315,6 +325,7 @@ async function viewDashboard() {
   projects.forEach((p) => { compOf[p.id] = p.company_id; });
   const inScope = (pid) => {
     if (!pv && !compOf[pid]) return false;
+    if (!cv && compOf[pid]) return false;
     if (dashTab === "personal") return !compOf[pid];
     if (dashTab === "companies") return !!compOf[pid];
     return true;
@@ -331,12 +342,15 @@ async function viewDashboard() {
   } else {
     html += `<h3>${esc(t("upcoming.title"))}</h3><p class="muted">${esc(t("upcoming.empty"))}</p>`;
   }
-  const showPersonal = pv && dashTab !== "companies", showCompanies = dashTab !== "personal";
-  if (showPersonal) {
+  const showPersonalTab = dashTab !== "companies", showCompanies = cv && dashTab !== "personal";
+  if (showPersonalTab) {
     html += `<h3>${esc(t("dash.pws"))}</h3>`;
-    html += personal.length
-      ? `<div class="grid">${sortBy(personal, S.sort.key === "title" ? "name" : S.sort.key, S.sort.dir).map(projCard).join("")}</div>`
-      : `<p class="muted">${esc(t("dash.empty_personal"))} <a href="#/projects">${esc(t("dash.create_project"))}</a></p>`;
+    html += `<div class="toolbar"><span>${esc(t("dash.cws"))}</span> <button class="btn small" id="dash-comp-toggle">${esc(cv ? t("profile.pers_off") : t("profile.pers_on"))}</button></div>`;
+    if (pv) {
+      html += personal.length
+        ? `<div class="grid">${sortBy(personal, S.sort.key === "title" ? "name" : S.sort.key, S.sort.dir).map(projCard).join("")}</div>`
+        : `<p class="muted">${esc(t("dash.empty_personal"))} <a href="#/projects">${esc(t("dash.create_project"))}</a></p>`;
+    }
   }
   if (showCompanies) {
     html += `<h3>${esc(t("dash.cws"))}</h3>`;
@@ -346,6 +360,8 @@ async function viewDashboard() {
       : `<p class="muted">${esc(t("dash.no_company_projects"))}</p>`;
   }
   $("#dash-body").innerHTML = html;
+  const compToggle = $("#dash-comp-toggle");
+  if (compToggle) compToggle.onclick = () => { setCompaniesVisible(!companiesVisible()); viewDashboard(); };
   if (!hasCompany()) {
     $("#dash-body").insertAdjacentHTML("beforeend",
       `<div class="detail"><h3>${esc(t("team.join"))}</h3>
@@ -374,16 +390,9 @@ async function viewProfile() {
       <label>Email<input value="${esc(S.me.email || "")}" disabled /></label>
       <button class="btn" id="pf-save">${esc(t("common.save"))}</button>
     </div>
-    <div class="detail"><h3>Personal Workspace</h3>
-      <div class="toolbar"><button class="btn small" id="pf-pers-toggle">${esc(personalVisible() ? t("profile.pers_off") : t("profile.pers_on"))}</button></div>
-    </div>
     <div class="detail"><h3>${esc(t("account.title"))}</h3>
       <p class="muted">${esc(t("account.hint"))}</p>
       <button class="btn small danger" id="acc-del">${esc(t("account.delete"))}</button></div>`;
-  $("#pf-pers-toggle").onclick = () => {
-    setPersonalVisible(!personalVisible());
-    viewProfile();
-  };
   $("#pf-save").onclick = async () => {    const r = await withErr(() => Api.users.update(S.me.id, {
       first_name: $("#pf-first").value, last_name: $("#pf-last").value, phone_number: $("#pf-phone").value,
     }), t("common.saved"));
@@ -423,9 +432,10 @@ async function viewProjects(id) {
   if (!list) return;
   S.companies = companies || [];
   $("#np-comp").innerHTML = (personalVisible() ? `<option value="">${esc(t("proj.personal_opt"))}</option>` : "") +
-    S.companies.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+    (companiesVisible() ? S.companies.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("") : "");
   const items = sortBy(list, S.sort.key === "title" ? "name" : S.sort.key, S.sort.dir);
-  $("#proj-list").innerHTML = `<div class="grid">${items.map((p) => `<div class="card"><h3><a href="#/projects/${p.id}">${esc(p.name)}</a></h3>
+  const shown = items.filter((p) => (p.company_id ? companiesVisible() : personalVisible()));
+  $("#proj-list").innerHTML = `<div class="grid">${shown.map((p) => `<div class="card"><h3><a href="#/projects/${p.id}">${esc(p.name)}</a></h3>
     <div><span class="tag">${p.company_id ? esc((S.companies.find((c) => c.id === p.company_id) || {}).name || "company") : esc(t("tag.personal"))}</span></div>
     <div class="muted">${esc(p.description || "")}</div></div>`).join("")}</div>`;
   $("#np-btn").onclick = async () => {
@@ -557,10 +567,11 @@ async function viewTasks(id) {
     const list = await withErr(() => Api.tasks.list({ status: $("#tf-status").value || undefined }));
     if (!list) return;
     let items = sortBy(list, S.sort.key === "name" ? "title" : S.sort.key === "title" ? "title" : S.sort.key, S.sort.dir);
-    if (!personalVisible()) {
+    if (!personalVisible() || !companiesVisible()) {
+      const pv2 = personalVisible(), cv2 = companiesVisible();
       const projs = await Api.projects.list({ page: 0, size: 200 }).catch(() => []);
-      const persIds = new Set((projs || []).filter((p) => !p.company_id).map((p) => p.id));
-      items = items.filter((x) => !persIds.has(x.project_id));
+      const hideIds = new Set((projs || []).filter((p) => (!pv2 && !p.company_id) || (!cv2 && p.company_id)).map((p) => p.id));
+      items = items.filter((x) => !hideIds.has(x.project_id));
     }
     $("#task-list").innerHTML = `<div class="grid">${items.map((x) => `<div class="card"><h3><a href="#/tasks/${x.id}">${esc(x.title)}</a></h3>
       <div><span class="tag blue">${esc(x.status)}</span><span class="tag">${esc(x.priority)}</span></div></div>`).join("")}</div>`;
@@ -684,6 +695,8 @@ async function viewCompanyDetail(cid) {
   m.innerHTML = `<h2>${esc(c.name)}</h2>
     <div><span class="tag">${esc(t("comp.your_role"))}: ${esc(myRole || "—")}</span> <span class="tag">${esc(t("comp.owner"))}: ${shortId(c.owner_id)}</span></div>
     <p>${esc(c.description || "")}</p>
+    <div class="detail"><h3>${esc(t("dash.pws"))}</h3>
+    <div class="toolbar"><button class="btn small" id="co-pers-toggle">${esc(personalVisible() ? t("profile.pers_off") : t("profile.pers_on"))}</button></div></div>
     <div class="toolbar"><input id="ce-name" value="${esc(c.name)}" /><input id="ce-desc" value="${esc(c.description || "")}" />
     <button class="btn small" id="ce-save">${esc(t("common.save"))}</button>
     <button class="btn small danger" id="ce-del">${esc(t("common.delete"))}</button></div>
@@ -705,6 +718,8 @@ async function viewCompanyDetail(cid) {
     const r = await withErr(() => Api.companies.update(cid, { name: $("#ce-name").value, description: $("#ce-desc").value }), t("common.saved"));
     if (r) viewCompanyDetail(cid);
   };
+  const coPersToggle = $("#co-pers-toggle");
+  if (coPersToggle) coPersToggle.onclick = () => { setPersonalVisible(!personalVisible()); viewCompanyDetail(cid); };
   $("#ce-del").onclick = async () => {
     if (!confirm(t("comp.del_confirm"))) return;
     const r = await withErr(() => Api.companies.remove(cid), t("common.deleted"));
@@ -905,7 +920,7 @@ async function viewWorkspaces() {
   const m = $("#main");
   const list = (await withErr(() => Api.workspaces.list())) || [];
   const pers = personalVisible() ? list.filter((w) => w.type === "PERSONAL") : [];
-  const comp = list.filter((w) => w.type !== "PERSONAL");
+  const comp = companiesVisible() ? list.filter((w) => w.type !== "PERSONAL") : [];
   const card = (w) => `<div class="card"><h3>${esc(w.name)}</h3>
     <div><span class="tag ${w.type === "PERSONAL" ? "green" : "blue"}">${esc(w.type)}</span>
     ${w.company_id ? `<span class="tag">${esc((S.companies.find((c) => c.id === w.company_id) || {}).name || shortId(w.company_id))}</span>` : ""}</div>

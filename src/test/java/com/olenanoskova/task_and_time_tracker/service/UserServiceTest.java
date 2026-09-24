@@ -60,8 +60,7 @@ class UserServiceTest {
     }
 
     @Test
-    void createUser_success_callsSaveAndReturns() {
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
+    void createUser_success_callsSaveAndReturns() {        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
         UserEntity entity = new UserEntity();
         UserEntity saved = new UserEntity();
         saved.setId(UUID.randomUUID());
@@ -74,6 +73,33 @@ class UserServiceTest {
         User result = userService.createUser(user);
         assertNotNull(result.getId());
         verify(userRepository).save(entity);
+    }
+
+    @Test
+    void createUser_normalizesEmail() {
+        user.setEmail("  Mia@Example.COM ");
+        when(userRepository.findByEmail("mia@example.com")).thenReturn(Optional.empty());
+        UserEntity entity = new UserEntity();
+        UserEntity saved = new UserEntity();
+        saved.setId(UUID.randomUUID());
+        when(userMapper.toEntity(any())).thenReturn(entity);
+        when(userRepository.save(entity)).thenReturn(saved);
+        when(userMapper.toDomain(saved)).thenReturn(new User());
+
+        userService.createUser(user);
+
+        assertEquals("mia@example.com", user.getEmail());
+        verify(userRepository).findByEmail("mia@example.com");
+    }
+
+    @Test
+    void getUserIdByEmail_normalizesEmail() {
+        UUID id = UUID.randomUUID();
+        UserEntity entity = new UserEntity();
+        entity.setId(id);
+        when(userRepository.findByEmail("friend@example.com")).thenReturn(Optional.of(entity));
+
+        assertEquals(id, userService.getUserIdByEmail(" Friend@Example.com "));
     }
 
     @Test
