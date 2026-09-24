@@ -55,10 +55,21 @@ public class UserController {
         return ResponseEntity.ok(responseList);
     }
 
+    /**
+     * Resolves a user id by exact email so a project owner can share e.g. a
+     * personal project with someone outside their companies. Returns 404 for
+     * unknown emails; the caller still needs member-add rights on the project.
+     */
+    @GetMapping("/by-email")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserResponseDto> getUserByEmail(@RequestParam String email) {
+        UUID id = userService.getUserIdByEmail(email == null ? "" : email.trim());
+        return ResponseEntity.ok(userMapper.toDto(userService.getUserById(id)));
+    }
+
     @GetMapping("/{id}")
     @PreAuthorize("@securityService.canAccessUser(#id)")
     public ResponseEntity<UserResponseDto> getUserById(@PathVariable UUID id) {
-
         log.info("Fetching user with id {}", id);
 
         User user = userService.getUserById(id);

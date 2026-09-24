@@ -227,6 +227,10 @@ function updateNavVisibility() {
   });
 }
 
+/* personal workspace visibility (per browser, like theme/lang) */
+const personalVisible = () => localStorage.getItem("ttt_show_personal") !== "0";
+const setPersonalVisible = (v) => localStorage.setItem("ttt_show_personal", v ? "1" : "0");
+
 /* ---------- router ---------- */
 const routes = {
   dashboard: viewDashboard,
@@ -236,6 +240,7 @@ const routes = {
   team: viewTeam,
   notifications: viewNotifications,
   workspaces: viewWorkspaces,
+  profile: viewProfile,
   join: viewJoin,
 };
 function checkPendingJoin() {
@@ -273,11 +278,13 @@ window.addEventListener("hashchange", () => { checkPendingJoin(); if (Api.token(
 /* ---------- dashboard: 3 tabs ---------- */
 let dashTab = "all"; // personal | companies | all
 async function viewDashboard() {
+  const pv = personalVisible();
+  if (!pv && dashTab === "personal") dashTab = hasCompany() ? "companies" : "all";
   if (!hasCompany() && dashTab === "companies") dashTab = "personal";
   const m = $("#main");
   m.innerHTML = `<h2>${esc(t("dash.title"))}</h2>
     <div class="tabs">
-      <button class="tab" data-t="personal">${esc(t("dash.personal"))}</button>
+      ${pv ? `<button class="tab" data-t="personal">${esc(t("dash.personal"))}</button>` : ""}
       ${hasCompany() ? `<button class="tab" data-t="companies">${esc(t("dash.companies"))}</button>
       <button class="tab" data-t="all">${esc(t("dash.all"))}</button>` : ""}
     </div>
@@ -307,6 +314,7 @@ async function viewDashboard() {
   const compOf = {};
   projects.forEach((p) => { compOf[p.id] = p.company_id; });
   const inScope = (pid) => {
+    if (!pv && !compOf[pid]) return false;
     if (dashTab === "personal") return !compOf[pid];
     if (dashTab === "companies") return !!compOf[pid];
     return true;
@@ -323,20 +331,12 @@ async function viewDashboard() {
   } else {
     html += `<h3>${esc(t("upcoming.title"))}</h3><p class="muted">${esc(t("upcoming.empty"))}</p>`;
   }
-  const showPersonal = dashTab !== "companies", showCompanies = dashTab !== "personal";
+  const showPersonal = pv && dashTab !== "companies", showCompanies = dashTab !== "personal";
   if (showPersonal) {
     html += `<h3>${esc(t("dash.pws"))}</h3>`;
     html += personal.length
       ? `<div class="grid">${sortBy(personal, S.sort.key === "title" ? "name" : S.sort.key, S.sort.dir).map(projCard).join("")}</div>`
       : `<p class="muted">${esc(t("dash.empty_personal"))} <a href="#/projects">${esc(t("dash.create_project"))}</a></p>`;
-    html += `<div class="detail"><h3>${esc(t("profile.title"))}</h3>
-      <label>${esc(t("f.first"))}<input id="pf2-first" value="${esc(S.me.first_name || "")}" /></label>
-      <label>${esc(t("f.last"))}<input id="pf2-last" value="${esc(S.me.last_name || "")}" /></label>
-      <label>${esc(t("f.phone"))}<input id="pf2-phone" value="${esc(S.me.phone_number || "")}" /></label>
-      <button class="btn" id="pf2-save">${esc(t("common.save"))}</button></div>`;
-    html += `<div class="detail"><h3>${esc(t("account.title"))}</h3>
-      <p class="muted">${esc(t("account.hint"))}</p>
-      <button class="btn small danger" id="acc-del">${esc(t("account.delete"))}</button></div>`;
   }
   if (showCompanies) {
     html += `<h3>${esc(t("dash.cws"))}</h3>`;
@@ -346,17 +346,6 @@ async function viewDashboard() {
       : `<p class="muted">${esc(t("dash.no_company_projects"))}</p>`;
   }
   $("#dash-body").innerHTML = html;
-  const pf2save = $("#pf2-save");
-  if (pf2save) pf2save.onclick = async () => {
-    const r = await withErr(() => Api.users.update(S.me.id, {
-      first_name: $("#pf2-first").value, last_name: $("#pf2-last").value, phone_number: $("#pf2-phone").value,
-    }), t("common.saved"));
-    if (r) {
-      S.me = await Api.users.get(S.me.id).catch(() => S.me);
-      $("#me-box").innerHTML = `${esc(S.me.first_name)} ${esc(S.me.last_name)}<br>${esc(S.me.email)}`;
-      viewDashboard();
-    }
-  };
   if (!hasCompany()) {
     $("#dash-body").insertAdjacentHTML("beforeend",
       `<div class="detail"><h3>${esc(t("team.join"))}</h3>
@@ -372,7 +361,34 @@ async function viewDashboard() {
       }
     };
   }
-  $("#acc-del")?.addEventListener("click", async () => {
+}
+
+/* ---------- profile ---------- */
+async function viewProfile() {
+  const m = $("#main");
+  m.innerHTML = `<h2>${esc(t("profile.title"))}</h2>
+    <div class="detail"><h3>${esc(t("profile.title"))}</h3>
+      <label>${esc(t("f.first"))}<input id="pf-first" value="${esc(S.me.first_name || "")}" /></label>
+      <label>${esc(t("f.last"))}<input id="pf-last" value="${esc(S.me.last_name || "")}" /></label>
+      <label>${esc(t("f.phone"))}<input id="pf-phone" value="${esc(S.me.phone_number || "")}" /></label>
+      <label>Email<input value="${esc(S.me.email || "")}" disabled /></label>
+      <label><input type="checkbox" id="pf-showpers" ${personalVisible() ? "checked" : ""} /> ${esc(t("profile.show_personal"))}</label>
+      <button class="btn" id="pf-save">${esc(t("common.save"))}</button>
+    </div>
+    <div class="detail"><h3>${esc(t("account.title"))}</h3>
+      <p class="muted">${esc(t("account.hint"))}</p>
+      <button class="btn small danger" id="acc-del">${esc(t("account.delete"))}</button></div>`;
+  $("#pf-showpers").onchange = (e) => setPersonalVisible(e.target.checked);
+  $("#pf-save").onclick = async () => {    const r = await withErr(() => Api.users.update(S.me.id, {
+      first_name: $("#pf-first").value, last_name: $("#pf-last").value, phone_number: $("#pf-phone").value,
+    }), t("common.saved"));
+    if (r) {
+      S.me = await Api.users.get(S.me.id).catch(() => S.me);
+      $("#me-box").innerHTML = `${esc(S.me.first_name)} ${esc(S.me.last_name)}<br>${esc(S.me.email)}`;
+      viewProfile();
+    }
+  };
+  $("#acc-del").onclick = async () => {
     if (!confirm(t("account.confirm"))) return;
     if (!confirm(t("account.confirm2"))) return;
     const r = await withErr(() => Api.users.remove(S.me.id), t("account.deleted"));
@@ -382,7 +398,7 @@ async function viewDashboard() {
       location.hash = "#/dashboard";
       showAuth();
     }
-  });
+  };
 }
 
 /* ---------- projects ---------- */
@@ -401,7 +417,7 @@ async function viewProjects(id) {
   ]);
   if (!list) return;
   S.companies = companies || [];
-  $("#np-comp").innerHTML = `<option value="">${esc(t("proj.personal_opt"))}</option>` +
+  $("#np-comp").innerHTML = (personalVisible() ? `<option value="">${esc(t("proj.personal_opt"))}</option>` : "") +
     S.companies.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
   const items = sortBy(list, S.sort.key === "title" ? "name" : S.sort.key, S.sort.dir);
   $("#proj-list").innerHTML = `<div class="grid">${items.map((p) => `<div class="card"><h3><a href="#/projects/${p.id}">${esc(p.name)}</a></h3>
@@ -410,6 +426,7 @@ async function viewProjects(id) {
   $("#np-btn").onclick = async () => {
     const body = { name: $("#np-name").value, description: $("#np-desc").value || undefined, created_by: S.me.id };
     const cid = $("#np-comp").value;
+    if (!cid && !personalVisible()) { toast(t("proj.need_company"), "error"); return; }
     if (cid) body.company_id = cid;
     const r = await withErr(() => Api.projects.create(body), t("common.created"));
     if (r) viewProjects();
@@ -467,12 +484,18 @@ async function viewProjectDetail(pid) {
     if (r) viewProjectDetail(pid);
   };
   $("#nm-btn").onclick = async () => {
-    const typed = ($("#nm-user").value || "").trim().toLowerCase();
+    const raw = ($("#nm-user").value || "").trim();
+    const typed = raw.toLowerCase();
     if (!typed) { toast(t("notif.type_recipient")); return; }
+    const inProject = new Set((members || []).map((x) => x.user_id));
+    const addById = async (uid) => {
+      if (inProject.has(uid)) { toast(t("proj.member_exists"), "error"); return; }
+      const r = await withErr(() => Api.projects.addMember(pid, { user_id: uid, member_role: $("#nm-role").value }), t("common.added"));
+      if (r) viewProjectDetail(pid);
+    };
     const pool = p.company_id
       ? await Api.companies.members(p.company_id).catch(() => [])
       : (await Promise.all((S.companies || []).map((c) => Api.companies.members(c.id).catch(() => [])))).flat();
-    const inProject = new Set((members || []).map((x) => x.user_id));
     const seen = new Set();
     const candidates = [];
     for (const x of pool) {
@@ -484,17 +507,17 @@ async function viewProjectDetail(pid) {
     const exact = candidates.find((r) => r.email && r.email === typed);
     const matches = candidates.filter((r) => r.label.includes(typed));
     const target = exact || (matches.length === 1 ? matches[0] : null);
-    if (!target) {
-      if (matches.length > 1) {
-        const options = matches.map((x) => (x.who ? `${x.who} <${x.email || "?"}>` : (x.email || shortId(x.id)))).join("; ");
-        toast(`${t("notif.ambiguous")}: ${options}`, "error");
-      } else {
-        toast(t("proj.member_notfound"), "error");
-      }
+    if (target) { addById(target.id); return; }
+    if (matches.length > 1) {
+      const options = matches.map((x) => (x.who ? `${x.who} <${x.email || "?"}>` : (x.email || shortId(x.id)))).join("; ");
+      toast(`${t("notif.ambiguous")}: ${options}`, "error");
       return;
     }
-    const r = await withErr(() => Api.projects.addMember(pid, { user_id: target.id, member_role: $("#nm-role").value }), t("common.added"));
-    if (r) viewProjectDetail(pid);
+    if (typed.includes("@")) {
+      const found = await Api.users.byEmail(raw).catch(() => null);
+      if (found && found.id) { addById(found.id); return; }
+    }
+    toast(t("proj.member_notfound"), "error");
   };
   $$("[data-del-member]").forEach((b) => (b.onclick = async () => {
     const r = await withErr(() => Api.projects.removeMember(pid, b.dataset.delMember), t("common.removed"));
@@ -523,7 +546,12 @@ async function viewTasks(id) {
   const load = async () => {
     const list = await withErr(() => Api.tasks.list({ status: $("#tf-status").value || undefined }));
     if (!list) return;
-    const items = sortBy(list, S.sort.key === "name" ? "title" : S.sort.key === "title" ? "title" : S.sort.key, S.sort.dir);
+    let items = sortBy(list, S.sort.key === "name" ? "title" : S.sort.key === "title" ? "title" : S.sort.key, S.sort.dir);
+    if (!personalVisible()) {
+      const projs = await Api.projects.list({ page: 0, size: 200 }).catch(() => []);
+      const persIds = new Set((projs || []).filter((p) => !p.company_id).map((p) => p.id));
+      items = items.filter((x) => !persIds.has(x.project_id));
+    }
     $("#task-list").innerHTML = `<div class="grid">${items.map((x) => `<div class="card"><h3><a href="#/tasks/${x.id}">${esc(x.title)}</a></h3>
       <div><span class="tag blue">${esc(x.status)}</span><span class="tag">${esc(x.priority)}</span></div></div>`).join("")}</div>`;
   };
@@ -855,7 +883,7 @@ async function viewNotifications() {
 async function viewWorkspaces() {
   const m = $("#main");
   const list = (await withErr(() => Api.workspaces.list())) || [];
-  const pers = list.filter((w) => w.type === "PERSONAL");
+  const pers = personalVisible() ? list.filter((w) => w.type === "PERSONAL") : [];
   const comp = list.filter((w) => w.type !== "PERSONAL");
   const card = (w) => `<div class="card"><h3>${esc(w.name)}</h3>
     <div><span class="tag ${w.type === "PERSONAL" ? "green" : "blue"}">${esc(w.type)}</span>

@@ -73,6 +73,36 @@ class UserControllerTest {
     }
 
     @Test
+    void getUserByEmail_returns200_whenFound() throws Exception {
+        UUID id = UUID.randomUUID();
+        var user = new com.olenanoskova.task_and_time_tracker.service.model.User();
+        user.setId(id);
+        user.setEmail("friend@example.com");
+
+        var dto = new com.olenanoskova.task_and_time_tracker.controller.dto.UserResponseDto();
+        dto.setId(id);
+        dto.setEmail("friend@example.com");
+
+        when(userService.getUserIdByEmail("friend@example.com")).thenReturn(id);
+        when(userService.getUserById(id)).thenReturn(user);
+        when(userMapper.toDto(user)).thenReturn(dto);
+
+        mvc.perform(get("/users/by-email").param("email", "friend@example.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.email").value("friend@example.com"));
+    }
+
+    @Test
+    void getUserByEmail_returns404_whenUnknown() throws Exception {
+        when(userService.getUserIdByEmail("ghost@example.com")).thenThrow(
+                new com.olenanoskova.task_and_time_tracker.exception.ResourceNotFoundException("User with email ghost@example.com not found"));
+
+        mvc.perform(get("/users/by-email").param("email", "ghost@example.com"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     void getAllUsers_returns200_emptyList() throws Exception {
         UUID companyId = UUID.randomUUID();
         when(securityService.getCurrentUserCompanyIds()).thenReturn(java.util.List.of(companyId));
