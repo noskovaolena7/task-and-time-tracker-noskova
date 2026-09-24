@@ -467,7 +467,33 @@ async function viewProjectDetail(pid) {
     if (r) viewProjectDetail(pid);
   };
   $("#nm-btn").onclick = async () => {
-    const r = await withErr(() => Api.projects.addMember(pid, { user_id: $("#nm-user").value, member_role: $("#nm-role").value }), t("common.added"));
+    const typed = ($("#nm-user").value || "").trim().toLowerCase();
+    if (!typed) { toast(t("notif.type_recipient")); return; }
+    const pool = p.company_id
+      ? await Api.companies.members(p.company_id).catch(() => [])
+      : (await Promise.all((S.companies || []).map((c) => Api.companies.members(c.id).catch(() => [])))).flat();
+    const inProject = new Set((members || []).map((x) => x.user_id));
+    const seen = new Set();
+    const candidates = [];
+    for (const x of pool) {
+      if (!x.user_id || inProject.has(x.user_id) || seen.has(x.user_id)) continue;
+      seen.add(x.user_id);
+      const who = `${x.first_name || ""} ${x.last_name || ""}`.trim() || x.email || shortId(x.user_id);
+      candidates.push({ id: x.user_id, email: (x.email || "").toLowerCase(), label: who.toLowerCase(), who });
+    }
+    const exact = candidates.find((r) => r.email && r.email === typed);
+    const matches = candidates.filter((r) => r.label.includes(typed));
+    const target = exact || (matches.length === 1 ? matches[0] : null);
+    if (!target) {
+      if (matches.length > 1) {
+        const options = matches.map((x) => (x.who ? `${x.who} <${x.email || "?"}>` : (x.email || shortId(x.id)))).join("; ");
+        toast(`${t("notif.ambiguous")}: ${options}`, "error");
+      } else {
+        toast(t("proj.member_notfound"), "error");
+      }
+      return;
+    }
+    const r = await withErr(() => Api.projects.addMember(pid, { user_id: target.id, member_role: $("#nm-role").value }), t("common.added"));
     if (r) viewProjectDetail(pid);
   };
   $$("[data-del-member]").forEach((b) => (b.onclick = async () => {
