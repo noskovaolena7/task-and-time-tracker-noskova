@@ -91,4 +91,31 @@ class ProjectControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$").isArray());
     }
+
+    @Test
+    void getAllProjects_includesMemberProjects() throws Exception {
+        var p1 = new com.olenanoskova.task_and_time_tracker.service.model.Project();
+        p1.setId(java.util.UUID.randomUUID());
+        var p2 = new com.olenanoskova.task_and_time_tracker.service.model.Project();
+        p2.setId(java.util.UUID.randomUUID());
+
+        var d1 = new com.olenanoskova.task_and_time_tracker.controller.dto.ProjectResponseDto();
+        d1.setId(p1.getId());
+        var d2 = new com.olenanoskova.task_and_time_tracker.controller.dto.ProjectResponseDto();
+        d2.setId(p2.getId());
+
+        when(projectService.getPersonalProjects(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.eq(0),
+                org.mockito.ArgumentMatchers.eq(20)))
+                .thenReturn(java.util.List.of(p1));
+        when(projectService.getMemberProjects(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(java.util.List.of(p2));
+        when(projectMapper.toDto(p1)).thenReturn(d1);
+        when(projectMapper.toDto(p2)).thenReturn(d2);
+
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/projects"))
+                .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.length()").value(2));
+    }
 }

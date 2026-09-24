@@ -31,5 +31,11 @@ public class ProjectMemberResponseDto {
     // may be null if the member has not been edited yet
     private Instant updatedAt;
 
+    // display data, may be null if the user was deleted
+    private String firstName;
+
+    private String lastName;
+
+    private String email;
 
 }

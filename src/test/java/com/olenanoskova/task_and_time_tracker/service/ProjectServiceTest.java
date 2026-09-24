@@ -27,6 +27,9 @@ class ProjectServiceTest {
     @Mock
     ProjectMapper projectMapper;
 
+    @Mock
+    com.olenanoskova.task_and_time_tracker.repository.ProjectMemberRepository projectMemberRepository;
+
     @InjectMocks
     ProjectServiceImpl projectService;
 
@@ -86,6 +89,24 @@ class ProjectServiceTest {
         when(projectRepository.existsById(id)).thenReturn(false);
         assertThrows(com.olenanoskova.task_and_time_tracker.exception.ProjectNotFoundException.class,
                 () -> projectService.deleteProject(id));
+    }
+
+    @Test
+    void getMemberProjects_returnsMemberProjects() {
+        UUID userId = UUID.randomUUID();
+        UUID projectId = UUID.randomUUID();
+        var entity = new com.olenanoskova.task_and_time_tracker.repository.entity.ProjectEntity();
+        entity.setId(projectId);
+        var domain = new com.olenanoskova.task_and_time_tracker.service.model.Project();
+        domain.setId(projectId);
+
+        when(projectMemberRepository.findProjectIdsByUserId(userId)).thenReturn(java.util.List.of(projectId));
+        when(projectRepository.findAllById(java.util.List.of(projectId))).thenReturn(java.util.List.of(entity));
+        when(projectMapper.toDomain(entity)).thenReturn(domain);
+
+        var list = projectService.getMemberProjects(userId);
+        assertEquals(1, list.size());
+        assertEquals(projectId, list.get(0).getId());
     }
 
 }
