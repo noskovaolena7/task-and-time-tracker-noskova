@@ -855,10 +855,16 @@ $("#logout-btn").addEventListener("click", () => {
 });
 $$("#nav button").forEach((b) => {
   b.addEventListener("click", () => {
+    const sb = document.querySelector(".sidebar");
+    if (sb) sb.classList.remove("open");
     const target = "#/" + b.dataset.route;
     if (location.hash === target) route();
     else location.hash = target;
   });
+});
+$("#burger-btn").addEventListener("click", () => {
+  const sb = document.querySelector(".sidebar");
+  if (sb) sb.classList.toggle("open");
 });
 $$(".lang-sel").forEach((sel) => sel.addEventListener("change", onLangChange));
 $$(".theme-toggle").forEach((b) => b.addEventListener("click", () => Theme.toggle()));

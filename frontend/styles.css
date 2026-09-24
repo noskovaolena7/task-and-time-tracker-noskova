@@ -136,8 +136,16 @@ ul.clean li { background: var(--panel2); border-radius: 8px; padding: 8px 12px; 
 .toast.error { border-left-color: var(--danger); }
 .toast.ok { border-left-color: var(--accent2); }
 
+/* burger (mobile menu button, hidden on desktop) */
+.burger { display: none; }
+
 @media (max-width: 760px) {
   #app-view { flex-direction: column; }
-  .sidebar { width: 100%; height: auto; position: static; }
-  main { padding: 16px; }
+  .burger { display: block; position: fixed; top: 12px; right: 12px; z-index: 60;
+    background: linear-gradient(180deg, #1b2a5e 0%, #101c44 100%); color: #fff;
+    border: 1px solid #38bdf8; border-radius: 8px; padding: 8px 12px; font-size: 18px; }
+  .sidebar { display: none; }
+  .sidebar.open { display: flex; position: fixed; top: 0; right: 0; width: min(78vw, 280px);
+    height: 100vh; z-index: 50; border-right: 0; border-left: 1px solid #2c3f7d; }
+  main { padding: 60px 16px 16px; }
 }
