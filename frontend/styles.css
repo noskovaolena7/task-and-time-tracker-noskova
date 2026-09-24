@@ -105,7 +105,7 @@ button { cursor: pointer; }
 #nav { display: flex; flex-direction: column; gap: 4px; }
 #nav button { text-align: left; background: transparent; border: 0; color: var(--txt); padding: 9px 11px; border-radius: 8px; font-size: 14px; }
 #nav button.active, #nav button:hover { background: var(--panel2); }
-#logout-btn { margin-top: auto; }
+#logout-btn { margin-top: 2px; }
 .lang-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 6px; }
 .lang-row select { width: auto; padding: 6px 8px; }
 .theme-toggle { background: transparent; border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; font-size: 15px; }
